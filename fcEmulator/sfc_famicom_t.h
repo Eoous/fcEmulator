@@ -1,11 +1,17 @@
 #pragma once
+
 #include <memory>
 #include "sfc_rom.h"
 #include "sfc_code.h"
 #include "sfc_cpu.h"
+#include "sfc_6502.h"
+
+
+
 class sfc_famicom_t
 {
 public:
+	enum { SFC_DISASSEMBLY_BUF_LEN2 = 48 };
 	// 静态成员函数
 	// 智能指针的单例设计
 	static std::shared_ptr<sfc_famicom_t> getInstance(void* arg);
@@ -29,7 +35,8 @@ public:
 	uint8_t sfc_read_cpu_address(uint16_t address);
 	//write cpu address
 	void sfc_write_cpu_address(uint16_t address, uint8_t data);
-
+	//指定地方反汇编
+	void sfc_fc_disassembly(uint16_t address, char buf[]);
 	
 	sfc_rom_info_t get_rom_info() const;
 
@@ -67,4 +74,3 @@ private:
 	void sfc_famicom_uninit();
 
 };
-

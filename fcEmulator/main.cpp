@@ -21,6 +21,22 @@ int main(void) {
 	v2 |= d2 << 8;
 
 	printf("ROM: NMI: $%04X  RESET: $%04X  IRQ/BRK: $%04X\n", (int)v0, (int)v1, (int)v2);
+
+	//===================================
+	char b0[48], b1[48], b2[48];
+
+	famicom->sfc_fc_disassembly(v0, b0);
+	famicom->sfc_fc_disassembly(v1, b1);
+	famicom->sfc_fc_disassembly(v2, b2);
+	printf(
+		"NMI:     %s\n"
+		"RESET:   %s\n"
+		"IRQ/BRK: %s\n",
+		b0, b1, b2
+	);
+
+
+
 	getchar();
 	return 0;
 

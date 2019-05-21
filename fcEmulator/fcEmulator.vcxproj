@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="sfc_6502.h" />
     <ClInclude Include="sfc_code.h" />
     <ClInclude Include="sfc_cpu.h" />
     <ClInclude Include="sfc_famicom_t.h" />
@@ -149,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sfc_6502.cpp" />
     <ClCompile Include="sfc_cpu.cpp" />
     <ClCompile Include="sfc_famicom_t.cpp" />
   </ItemGroup>

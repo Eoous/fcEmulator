@@ -27,6 +27,9 @@
     <ClInclude Include="sfc_cpu.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="sfc_6502.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -36,6 +39,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="sfc_cpu.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="sfc_6502.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -272,3 +272,28 @@ void sfc_famicom_t::sfc_write_cpu_address(uint16_t address, uint8_t data) {
 	}
 	assert(!"invalid address");
 }
+
+//
+void sfc_famicom_t::sfc_fc_disassembly(uint16_t address, char buf[]) {
+	enum {
+		OFFSET_M= SFC_DISASSEMBLY_BUF_LEN2 -SFC_DISASSEMBLY_BUF_LEN,
+		OFFSET=8
+	};
+
+	static_assert(OFFSET < OFFSET_M, "LESS!");
+	memset(buf + 1, ' ', OFFSET);
+	buf[0] = '$';
+	sfc_btoh(buf + 1, (uint8_t)(address >> 8));
+	sfc_btoh(buf + 3, (uint8_t)(address));
+
+	sfc_6502_code_t code;
+	code.data = 0;
+
+	code.set_op(sfc_read_cpu_address(address));
+	code.set_a1(sfc_read_cpu_address(address + 1));
+	code.set_a2(sfc_read_cpu_address(address + 2));
+
+	//反汇编
+	code.sfc_6502_disassembly(buf + OFFSET);
+
+}
