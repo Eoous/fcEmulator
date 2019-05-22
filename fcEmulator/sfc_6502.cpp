@@ -3,7 +3,12 @@
 
 #define sfc_fallthrough
 
+
+//============================================
+//进制转换
+//SFC_HEXDATA[] = "0123456789ABCDEF";
 void sfc_btoh(char o[], uint8_t b) {
+	printf("?");
 	o[0] = SFC_HEXDATA[b >> 4];
 
 	o[1] = SFC_HEXDATA[b & (uint8_t)0x0F];
