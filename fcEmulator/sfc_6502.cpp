@@ -8,7 +8,6 @@
 //进制转换
 //SFC_HEXDATA[] = "0123456789ABCDEF";
 void sfc_btoh(char o[], uint8_t b) {
-	printf("?");
 	o[0] = SFC_HEXDATA[b >> 4];
 
 	o[1] = SFC_HEXDATA[b & (uint8_t)0x0F];
@@ -136,18 +135,18 @@ void sfc_6502_code_t::sfc_6502_disassembly(char buf[SFC_DISASSEMBLY_BUF_LEN]) {
 
 ////===================================================
 //设置
-void sfc_6502_code_t::set_op(uint8_t op) {
+void sfc_6502_code_t::set_op(const uint8_t& op) {
 	this->op = op;
 }
 
-void sfc_6502_code_t::set_a1(uint8_t a1) {
+void sfc_6502_code_t::set_a1(const uint8_t& a1) {
 	this->a1 = a1;
 }
 
-void sfc_6502_code_t::set_a2(uint8_t a2) {
+void sfc_6502_code_t::set_a2(const uint8_t& a2) {
 	this->a2 = a2;
 }
 
-void sfc_6502_code_t::set_ctrl(uint8_t ctrl) {
+void sfc_6502_code_t::set_ctrl(const uint8_t& ctrl) {
 	this->ctrl = ctrl;
 }

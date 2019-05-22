@@ -25,10 +25,10 @@ public:
 
 //===================================================
 //设置op a1 a2 ctrl值
-	void set_op(uint8_t op);
-	void set_a1(uint8_t a1);
-	void set_a2(uint8_t a2);
-	void set_ctrl(uint8_t ctrl);
+	void set_op(const uint8_t& op);
+	void set_a1(const uint8_t& a1);
+	void set_a2(const uint8_t& a2);
+	void set_ctrl(const uint8_t& ctrl);
 
 
 private:
