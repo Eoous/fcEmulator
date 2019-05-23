@@ -1,6 +1,4 @@
 #include "sfc_famicom_t.h"
-#include <assert.h>
-#include <string>
 
 sfc_famicom_t::sfc_famicom_t(void *argument):argument(argument)
 {
@@ -20,8 +18,8 @@ sfc_ecode sfc_famicom_t::sfc_famicom_init() {
 	memset(&rom_info, 0, sizeof(rom_info));
 
 	//初步BANK
-	prg_banks[0] = main_memory;
-	prg_banks[1] = save_memory;
+	cpu_.prg_banks[0] = cpu_.main_memory;
+	cpu_.prg_banks[3] = cpu_.save_memory;
 
 	return sfc_load_new_rom();
 	return SFC_ERROR_OK;
@@ -121,7 +119,7 @@ std::shared_ptr<sfc_famicom_t> sfc_famicom_t::getInstance(void* arg) {
 
 
 void sfc_famicom_t::sfc_load_prgrom_8k(const int& des, const int& src) {
-	prg_banks[4 + des] = rom_info.data_prgrom + 8 * 1024 * src;
+	cpu_.prg_banks[4 + des] = rom_info.data_prgrom + 8 * 1024 * src;
 }
 
 
@@ -162,7 +160,7 @@ sfc_ecode sfc_famicom_t::sfc_load_new_rom() {
 
 	//首次重置
 	if (code == SFC_ERROR_OK) {
-		sfc_mapper_00_reset();
+		sfc_famicom_reset();
 	}
 	return code;
 }
@@ -179,101 +177,13 @@ sfc_ecode sfc_famicom_t::sfc_load_mapper(const uint8_t& id) {
 
 //============================================
 //	cpu部分
-uint8_t sfc_famicom_t::sfc_read_cpu_address(uint16_t address) {
-	/*
-	CPU 地址空间
-	+---------+-------+-------+-----------------------+
-	| 地址    | 大小  | 标记  |         描述          |
-	+---------+-------+-------+-----------------------+
-	| $0000   | $800  |       | RAM                   |
-	| $0800   | $800  | M     | RAM                   |
-	| $1000   | $800  | M     | RAM                   |
-	| $1800   | $800  | M     | RAM                   |
-	| $2000   | 8     |       | Registers             |
-	| $2008   | $1FF8 | R     | Registers             |
-	| $4000   | $20   |       | Registers             |
-	| $4020   | $1FDF |       | Expansion ROM         |
-	| $6000   | $2000 |       | SRAM                  |
-	| $8000   | $4000 |       | PRG-ROM               |
-	| $C000   | $4000 |       | PRG-ROM               |
-	+---------+-------+-------+-----------------------+
-	标记图例: M = $0000的镜像
-	R = $2000-2008 每 8 bytes 的镜像
-	(e.g. $2008=$2000, $2018=$2000, etc.)
-	*/
-	switch (address >> 13) {
-	case 0:
-		//高三位为0，[$0000,$2000) :系统主内存，4次镜像
-		return main_memory[address & (uint16_t)0x07ff];
-	case 1:
-		//高三位为1，[$2000,$4000) :PPU寄存器，8字节步进镜像
-		assert(!"NOT IMPL");
-		return 0;
-	case 2:
-		//高三位为2，[$4000,$6000) :pAPU寄存器 扩展ROM区
-		assert(!"NOT IMPL");
-		return 0;
-	case 3:
-		//高三位为3，[$6000,$8000) :存档 SRAM区
-		return save_memory[address & (uint16_t)0x1fff];
-	case 4:case 5:case 6:case 7 :
-		//高一位为1，[$8000,$10000):程序PRG-ROM区
-		return prg_banks[address >> 13][address & (uint16_t)0x1fff];
-	}
-	assert(!"invalid address");
-	return 0;
-}
 
 
 
-void sfc_famicom_t::sfc_write_cpu_address(uint16_t address, uint8_t data) {
-	/*
-	CPU 地址空间
-	+---------+-------+-------+-----------------------+
-	| 地址    | 大小  | 标记  |         描述          |
-	+---------+-------+-------+-----------------------+
-	| $0000   | $800  |       | RAM                   |
-	| $0800   | $800  | M     | RAM                   |
-	| $1000   | $800  | M     | RAM                   |
-	| $1800   | $800  | M     | RAM                   |
-	| $2000   | 8     |       | Registers             |
-	| $2008   | $1FF8 | R     | Registers             |
-	| $4000   | $20   |       | Registers             |
-	| $4020   | $1FDF |       | Expansion ROM         |
-	| $6000   | $2000 |       | SRAM                  |
-	| $8000   | $4000 |       | PRG-ROM               |
-	| $C000   | $4000 |       | PRG-ROM               |
-	+---------+-------+-------+-----------------------+
-	标记图例: M = $0000的镜像
-	R = $2000-2008 每 8 bytes 的镜像
-	(e.g. $2008=$2000, $2018=$2000, etc.)
-	*/
-	switch (address >> 13) {
-	case 0:
-		//高三位为0，[$0000,$2000) :系统主内存，4次镜像
-		main_memory[address & (uint16_t)0x07ff] = data;
-		return;
-	case 1:
-		//高三位为1，[$2000,$4000) :PPU寄存器，8字节步进镜像
-		assert(!"NOT IMPL");
-		return;
-	case 2:
-		//高三位为2，[$4000,$6000) :pAPU寄存器 扩展ROM区
-		assert(!"NOT IMPL");
-		return;
-	case 3:
-		//高三位为3，[$6000,$8000) :存档 SRAM区
-		save_memory[address & (uint16_t)0x1fff] = data;
-	case 4:case 5:case 6:case 7:
-		//高一位为1，[$8000,$10000):程序PRG-ROM区
-		assert(!"WARNING:PRG-ROM");
-		prg_banks[address >> 13][address & (uint16_t)0x1fff] = data;
-		return;
-	}
-	assert(!"invalid address");
-}
 
-//
+
+
+//反汇编
 void sfc_famicom_t::sfc_fc_disassembly(uint16_t address, char buf[]) {
 	enum {
 		OFFSET_M= SFC_DISASSEMBLY_BUF_LEN2 -SFC_DISASSEMBLY_BUF_LEN,
@@ -289,11 +199,54 @@ void sfc_famicom_t::sfc_fc_disassembly(uint16_t address, char buf[]) {
 	sfc_6502_code_t code;
 	code.data = 0;
 
-	code.set_op(sfc_read_cpu_address(address));
-	code.set_a1(sfc_read_cpu_address(address + 1));
-	code.set_a2(sfc_read_cpu_address(address + 2));
+	code.set_op(cpu_.sfc_read_cpu_address(address));
+	code.set_a1(cpu_.sfc_read_cpu_address(address + 1));
+	code.set_a2(cpu_.sfc_read_cpu_address(address + 2));
 
 	//反汇编
 	code.sfc_6502_disassembly(buf + OFFSET);
 
+}
+
+//sfcs the cpu execute one
+
+
+sfc_ecode sfc_famicom_t::sfc_famicom_reset() {
+	// 重置mapper
+	sfc_ecode ecode = sfc_mapper_00_reset();
+	if (ecode) return ecode;
+	// 初始化寄存器
+	const uint8_t pcl = cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 0);
+	const uint8_t pch = cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 1);
+	cpu_.registers_.get_program_counter() = (uint16_t)pcl | (uint16_t)pch << 8;
+	cpu_.registers_.get_accumulator() = 0;
+	cpu_.registers_.get_x_index() = 0;
+	cpu_.registers_.get_y_index() = 0;
+	cpu_.registers_.get_stack_pointer() = 0xfd;
+	cpu_.registers_.get_status() = 0x34
+		| SFC_FLAG_R    //  一直为1
+		;
+#if 1
+	// 测试指令ROM(nestest.nes)
+	cpu_.registers_.get_program_counter() = 0xC000;
+#endif
+	return SFC_ERROR_OK;
+}
+
+
+void sfc_famicom_t::sfc_before_execute() {
+	int line = 0;
+	line++;
+	char buf[48];
+	const uint16_t pc = cpu_.registers_.get_program_counter();
+	sfc_fc_disassembly(pc, buf);
+	printf(
+		"%4d - %s   A:%02X X:%02X Y:%02X P:%02X SP:%02X\n",
+		line, buf,
+		(int)cpu_.registers_.get_accumulator(),
+		(int)cpu_.registers_.get_x_index(),
+		(int)cpu_.registers_.get_y_index(),
+		(int)cpu_.registers_.get_status(),
+		(int)cpu_.registers_.get_stack_pointer()
+	);
 }
