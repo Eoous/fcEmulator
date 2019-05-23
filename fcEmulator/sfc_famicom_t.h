@@ -4,7 +4,8 @@
 #include "sfc_rom.h"
 #include "sfc_code.h"
 #include "sfc_cpu.h"
-#include "sfc_6502.h"
+#include <assert.h>
+#include <string>
 
 
 
@@ -28,15 +29,18 @@ public:
 	sfc_ecode sfc_load_mapper(const uint8_t& id);
 	// mapper 000 - NROM 重置
 	sfc_ecode sfc_mapper_00_reset();
+	//CPU
+	sfc_cpu cpu_;
+
+
+	void sfc_before_execute();
 
 //========================================================
 //	cpu部分
-	//read cpu address
-	uint8_t sfc_read_cpu_address(uint16_t address);
-	//write cpu address
-	void sfc_write_cpu_address(uint16_t address, uint8_t data);
+
 	//指定地方反汇编
 	void sfc_fc_disassembly(uint16_t address, char buf[]);
+	//sfc cpu execute one instruction
 	
 	sfc_rom_info_t get_rom_info() const;
 
@@ -45,14 +49,12 @@ private:
 	void *argument;
 	sfc_rom_info_t rom_info;
 
-	//程序内存仓库(bank)/窗口(window)
-	uint8_t* prg_banks[0x10000 >> 13];
 
-	//工作(work)/保存(save)内存
-	uint8_t save_memory[8 * 1024];
+	//重置
+	sfc_ecode sfc_famicom_reset();
 
-	//主内存
-	uint8_t main_memory[2 * 1024];
+
+
 
 	// 静态成员变量
 	// 智能指针的单例设计
@@ -64,6 +66,7 @@ private:
 	// 加载和卸载rom
 	sfc_ecode sfc_load_default_rom();
 	sfc_ecode sfc_free_default_rom();
+
 
 	// ban
 	sfc_famicom_t(const sfc_famicom_t& );
