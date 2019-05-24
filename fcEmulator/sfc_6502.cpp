@@ -70,8 +70,8 @@ void sfc_6502_code_t::sfc_6502_disassembly(char buf[SFC_DISASSEMBLY_BUF_LEN]) {
 		//XXX $ABCD,Y
 		//REAL
 		buf[ADDR_FIRSH] = '$';
-		sfc_btoh(buf + ADDR_FIRSH + 1, a2);
-		sfc_btoh(buf + ADDR_FIRSH + 2, a1);
+		sfc_btoh(buf + ADDR_FIRSH + 1, a2);					//a2是高位
+		sfc_btoh(buf + ADDR_FIRSH + 3, a1);					//a1是低位
 		if (opname.mode == SFC_AM_ABS)break;
 		buf[ADDR_FIRSH + 5] = ',';
 		buf[ADDR_FIRSH + 7] = opname.mode == SFC_AM_ABX ? 'X' : 'Y';
