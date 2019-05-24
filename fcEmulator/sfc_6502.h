@@ -445,34 +445,4 @@ const struct sfc_opname s_opname_data[256] = {
 
 
 
-// ---------------------------------- 寻址
-
-
-/// <summary>
-/// 寻址方式: 未知
-/// </summary>
-/// <param name=" ">The  .</param>
-/// <returns></returns>
-static   uint16_t sfc_addressing_UNK( ) {
-	assert(!"UNKNOWN ADDRESSING MODE");
-	return 0;
-}
-
-/// <summary>
-/// 寻址方式: 累加器
-/// </summary>
-/// <param name=" ">The  .</param>
-/// <returns></returns>
-static   uint16_t sfc_addressing_ACC( ) {
-	return 0;
-}
-
-/// <summary>
-/// 寻址方式: 隐含寻址
-/// </summary>
-/// <param name=" ">The  .</param>
-/// <returns></returns>
-static   uint16_t sfc_addressing_IMP( ) {
-	return 0;
-}
 
