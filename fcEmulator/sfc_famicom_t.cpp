@@ -223,9 +223,7 @@ sfc_ecode sfc_famicom_t::sfc_famicom_reset() {
 	cpu_.registers_.get_x_index() = 0;
 	cpu_.registers_.get_y_index() = 0;
 	cpu_.registers_.get_stack_pointer() = 0xfd;
-	cpu_.registers_.get_status() = 0x34
-		| SFC_FLAG_R    //  一直为1
-		;
+	cpu_.registers_.get_status() = 0x34| SFC_FLAG_R;    //  一直为1
 #if 1
 	// 测试指令ROM(nestest.nes)
 	cpu_.registers_.get_program_counter() = 0xC000;
