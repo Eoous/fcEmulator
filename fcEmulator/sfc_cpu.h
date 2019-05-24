@@ -131,6 +131,9 @@ enum sfc_status_flag {
 #define SFC_POP() (main_memory + 0x100)[++SFC_SP];
 #define SFC_WRITE(a,v) sfc_write_cpu_address(a, v )
 #define CHECK_ZSFLAG(x) { SFC_SF_IF(x & (uint8_t)0x80); SFC_ZF_IF(x == 0); }
+
+//sfc_addressing_##a == 通过寻址模式取得地址
+//sfc_operation_##o(address) == 用得到的地址进行操作
 #define OP(n, a, o) \
 case 0x##n:\
 {           \
@@ -164,13 +167,43 @@ public:
 private:
 
 
+	// ---------------------------------- 寻址
+
+
+	/// <summary>
+	/// 寻址方式: 未知
+	/// </summary>
+	/// <param name=" ">The  .</param>
+	/// <returns></returns>
+	uint16_t sfc_addressing_UNK() {
+		assert(!"UNKNOWN ADDRESSING MODE");
+		return 0;
+	}
+
+	/// <summary>
+	/// 寻址方式: 累加器
+	/// </summary>
+	/// <param name=" ">The  .</param>
+	/// <returns></returns>
+	uint16_t sfc_addressing_ACC() {
+		return 0;
+	}
+
+	/// <summary>
+	/// 寻址方式: 隐含寻址
+	/// </summary>
+	/// <param name=" ">The  .</param>
+	/// <returns></returns>
+	uint16_t sfc_addressing_IMP() {
+		return 0;
+	}
 
 	/// <summary>
 	/// 寻址方式: 立即寻址
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	    uint16_t sfc_addressing_IMM() {
+	uint16_t sfc_addressing_IMM() {
 		const uint16_t address = SFC_PC;
 		SFC_PC++;
 		return address;
