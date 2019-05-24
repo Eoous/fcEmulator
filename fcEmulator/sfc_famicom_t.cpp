@@ -113,11 +113,6 @@ std::shared_ptr<sfc_famicom_t> sfc_famicom_t::getInstance(void* arg) {
 //========================
 //3
 //载入8k PRG-ROM
-
-
-
-
-
 void sfc_famicom_t::sfc_load_prgrom_8k(const int& des, const int& src) {
 	cpu_.prg_banks[4 + des] = rom_info.data_prgrom + 8 * 1024 * src;
 }
@@ -218,7 +213,7 @@ sfc_ecode sfc_famicom_t::sfc_famicom_reset() {
 	// 初始化寄存器
 	const uint8_t pcl = cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 0);
 	const uint8_t pch = cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 1);
-	cpu_.registers_.get_program_counter() = (uint16_t)pcl | (uint16_t)pch << 8;
+	cpu_.registers_.get_program_counter() = (uint16_t)pcl | (uint16_t)pch << 8;			//设置pc初始地址c004 下面会重置成c000 ,如果从c004开始会报错
 	cpu_.registers_.get_accumulator() = 0;
 	cpu_.registers_.get_x_index() = 0;
 	cpu_.registers_.get_y_index() = 0;
@@ -233,7 +228,7 @@ sfc_ecode sfc_famicom_t::sfc_famicom_reset() {
 
 
 void sfc_famicom_t::sfc_before_execute() {
-	int line = 0;
+	static int line = 0;
 	line++;
 	char buf[48];
 	const uint16_t pc = cpu_.registers_.get_program_counter();
