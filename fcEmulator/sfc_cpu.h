@@ -181,6 +181,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
+		//保存的是16位地址 address0是低位 1是高位
 	    uint16_t sfc_addressing_ABS() {
 		const uint8_t address0 = SFC_READ(SFC_PC++);
 		const uint8_t address1 = SFC_READ(SFC_PC++);
