@@ -40,13 +40,11 @@ int main(void) {
 	);
 	printf("\n");
 
-	famicom->sfc_before_execute();
 
 
-	for (int i = 0; i != 15; ++i) {
-
-		famicom->cpu_.sfc_cpu_execute_one();
+	for (int i = 0; i != 105; ++i) {
 		famicom->sfc_before_execute();
+		famicom->cpu_.sfc_cpu_execute_one();
 
 	}
 
