@@ -146,6 +146,7 @@
     <ClInclude Include="sfc_code.h" />
     <ClInclude Include="sfc_cpu.h" />
     <ClInclude Include="sfc_famicom_t.h" />
+    <ClInclude Include="sfc_ppu_t.h" />
     <ClInclude Include="sfc_rom.h" />
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +154,7 @@
     <ClCompile Include="sfc_6502.cpp" />
     <ClCompile Include="sfc_cpu.cpp" />
     <ClCompile Include="sfc_famicom_t.cpp" />
+    <ClCompile Include="sfc_ppu_t.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

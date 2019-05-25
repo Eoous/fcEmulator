@@ -158,18 +158,22 @@ public:
 	//工作(work)/保存(save)内存
 	uint8_t save_memory[8 * 1024];
 
+	//显存
+	uint8_t video_memory[2 * 1024];
+
+	//4屏用额外显存
+	uint8_t video_memory_ex[2 * 1024];
+
 	//主内存
 	uint8_t main_memory[2 * 1024];
 
+//====================================
 	void sfc_cpu_execute_one();
 
-
+	//NMI - 不可屏蔽中断
+	void sfc_operation_NMI();
 private:
-
-
 	// ---------------------------------- 寻址
-
-
 	/// <summary>
 	/// 寻址方式: 未知
 	/// </summary>

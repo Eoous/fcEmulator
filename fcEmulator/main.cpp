@@ -1,55 +1,89 @@
-#include "sfc_famicom_t.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <crtdbg.h>
+#include <windows.h>
+#include <D2D1.h>
 
+#define SAFE_RELEASE(P) if(P){P->Release() ; P = NULL ;}
 
+ID2D1Factory* pD2DFactory = NULL; // Direct2D factory
+ID2D1HwndRenderTarget* pRenderTarget = NULL;   // Render target
+ID2D1SolidColorBrush* pBlackBrush = NULL; // A black brush, reflect the line color
 
-int main(void) {
-	std::shared_ptr<sfc_famicom_t> famicom=sfc_famicom_t::getInstance(nullptr);
+RECT rc; // Render area
+HWND g_Hwnd; // Window handle
 
-	auto test = famicom->get_rom_info();
+void createD2DResource(HWND hWnd) {
+	if (!pRenderTarget) {
+		HRESULT hr;
+		//创建工厂对象
+		hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
 
-	printf("ROM:PRG-ROM: %d x 16kb	CHR-ROM %d x 8kb	Mapper: %03d\n", 
-		(int)test.count_prgrom16kb,
-		(int)test.count_chrrom_8kb,
-		(int)test.mapper_number);
-	uint16_t v0 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_NMI + 0);
-	uint16_t d0 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_NMI + 1);
-	v0 |= d0 << 8;
-	uint16_t v1 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 0);
-	uint16_t d1 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 1);
-	v1 |= d1 << 8;
-	uint16_t v2 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_IRQBRK + 0);
-	uint16_t d2 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_IRQBRK + 1);
-	v2 |= d2 << 8;
+		if (FAILED(hr)) {
+			MessageBox(hWnd, "Create D2D factory failed!", "Error", 0);
+			return;
+		}
 
-	printf("ROM: NMI: $%04X  RESET: $%04X  IRQ/BRK: $%04X\n", (int)v0, (int)v1, (int)v2);
-
-	//===================================
-	char b0[48], b1[48], b2[48];
-
-	famicom->sfc_fc_disassembly(v0, b0);
-	famicom->sfc_fc_disassembly(v1, b1);
-	famicom->sfc_fc_disassembly(v2, b2);
-	printf(
-		"NMI:     %s\n"
-		"RESET:   %s\n"
-		"IRQ/BRK: %s\n",
-		b0, b1, b2
-	);
-	printf("\n");
-
-
-
-	for (int i = 0; i != 1000; ++i) {
-		famicom->sfc_before_execute();
-		famicom->cpu_.sfc_cpu_execute_one();
-
+		GetClientRect(hWnd, &rc);
+		//创建Render target
+		hr = pD2DFactory->CreateHwndRenderTarget(
+			D2D1::RenderTargetProperties(),		//第一个参数 属性  ，这个函数是默认属性
+			D2D1::HwndRenderTargetProperties(	//第二个参数是Hwnd类型 有三个参数，第一个是窗口句柄；第二个是Render target大小；第三个是Present选项，这里使用默认值
+				hWnd,
+				D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top)),
+			&pRenderTarget);
+		if (FAILED(hr))
+		{
+			MessageBox(hWnd, "Create render target failed!", "Error", 0);
+			return;
+		}
+		//创建Brush
+		hr = pRenderTarget->CreateSolidColorBrush(
+			D2D1::ColorF(D2D1::ColorF::Red),
+			&pBlackBrush);
+		if (FAILED(hr)) {
+			MessageBox(hWnd, "Create brush failed!", "Error", 0);
+			return;
+		}
 	}
+}
+
+//绘制矩形
+void drawRectangle() {
+	createD2DResource(g_Hwnd);
+
+	pRenderTarget->BeginDraw();
+
+	//clear bg color white
+	pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
+
+	//draw rc
+	pRenderTarget->DrawRectangle(D2D1::RectF(100.f, 100.f, 500.f, 500.f),
+		pBlackBrush);
+	HRESULT hr = pRenderTarget->EndDraw();
+
+}
+
+void cleanUp() {
+	SAFE_RELEASE(pRenderTarget);
+	SAFE_RELEASE(pBlackBrush);
+	SAFE_RELEASE(pD2DFactory);
+}
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpcmdLine, int nCmdShow)
+{
+	WNDCLASSEX winClass;
+	winClass.lpszClassName = "Direct2D";
+	winClass.cbSize = sizeof(WNDCLASSEX);
+	winClass.style = CS_HREDRAW | CS_VREDRAW;
+	winClass.lpfnWndProc = WndProc;
+	winClass.hInstance = hInstance;
+	winClass.hIcon = NULL;
+	winClass.hIconSm = NULL;
+	winClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	winClass.hbrBackground = NULL;
+	winClass.lpszMenuName = NULL;
+	winClass.cbClsExtra = 0;
+	winClass.cbWndExtra = 0;
 
 
-	getchar();
+
 	return 0;
-
 }

@@ -145,3 +145,14 @@ void sfc_cpu::sfc_cpu_execute_one() {
 }
 
 
+void sfc_cpu::sfc_operation_NMI() {
+	const uint8_t pch = (uint8_t)((SFC_PC) >> 8);
+	const uint8_t pcl = (uint8_t)SFC_PC;
+	SFC_PUSH(pch);
+	SFC_PUSH(pcl);
+	SFC_PUSH(SFC_P | (uint8_t)(SFC_FLAG_R));
+	SFC_IF_SE;
+	const uint8_t pcl2 = sfc_read_cpu_address(SFC_VECTOR_NMI + 0);
+	const uint8_t pch2 = sfc_read_cpu_address(SFC_VECTOR_NMI + 1);
+	registers_.get_program_counter() = (uint16_t)pcl2 | (uint16_t)pch2 << 8;
+}

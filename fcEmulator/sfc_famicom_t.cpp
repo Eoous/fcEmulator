@@ -203,7 +203,6 @@ void sfc_famicom_t::sfc_fc_disassembly(uint16_t address, char buf[]) {
 
 }
 
-//sfcs the cpu execute one
 
 
 sfc_ecode sfc_famicom_t::sfc_famicom_reset() {
@@ -219,14 +218,23 @@ sfc_ecode sfc_famicom_t::sfc_famicom_reset() {
 	cpu_.registers_.get_y_index() = 0;
 	cpu_.registers_.get_stack_pointer() = 0xfd;
 	cpu_.registers_.get_status() = 0x34| SFC_FLAG_R;    //  一直为1
-#if 1
-	// 测试指令ROM(nestest.nes)
-	cpu_.registers_.get_program_counter() = 0xC000;
-#endif
+
+	//调色板
+	//名称表
+	sfc_setup_nametable_bank();
+	//镜像
+	ppu_.banks[0xc] = ppu_.banks[0x8];
+	ppu_.banks[0xd] = ppu_.banks[0x9];
+	ppu_.banks[0xe] = ppu_.banks[0xa];
+	ppu_.banks[0xf] = ppu_.banks[0xb];
+//#if 1
+//	// 测试指令ROM(nestest.nes)
+//	cpu_.registers_.get_program_counter() = 0xC000;
+//#endif
 	return SFC_ERROR_OK;
 }
 
-
+//sfcs the cpu execute one
 void sfc_famicom_t::sfc_before_execute() {
 	static int line = 0;
 	line++;
@@ -243,3 +251,46 @@ void sfc_famicom_t::sfc_before_execute() {
 		(int)cpu_.registers_.get_stack_pointer()
 	);
 }
+
+//===========================
+//step 4
+void sfc_famicom_t::sfc_setup_nametable_bank() {
+	//four screens == 4屏
+	if (rom_info.four_screen) {
+		ppu_.banks[0x8] = cpu_.video_memory + 0x400 * 0;
+		ppu_.banks[0x9] = cpu_.video_memory + 0x400 * 1;
+		ppu_.banks[0xa] = cpu_.video_memory_ex + 0x400 * 0;
+		ppu_.banks[0xb] = cpu_.video_memory_ex + 0x400 * 1;
+	}
+	//横板
+	else if (rom_info.vmirroring) {
+		ppu_.banks[0x8] = cpu_.video_memory + 0x400 * 0;
+		ppu_.banks[0x9] = cpu_.video_memory + 0x400 * 1;
+		ppu_.banks[0xa] = cpu_.video_memory + 0x400 * 0;
+		ppu_.banks[0xb] = cpu_.video_memory + 0x400 * 1;
+	}
+	//纵版
+	else {
+		ppu_.banks[0x8] = cpu_.video_memory + 0x400 * 0;
+		ppu_.banks[0x9] = cpu_.video_memory + 0x400 * 0;
+		ppu_.banks[0xa] = cpu_.video_memory + 0x400 * 1;
+		ppu_.banks[0xb] = cpu_.video_memory + 0x400 * 1;
+	}
+}
+
+//开始垂直空白标记
+void sfc_famicom_t::sfc_vblank_flag_start(){
+	ppu_.status |= (uint8_t)SFC_PPU2000_VBlank;
+}
+
+void sfc_famicom_t::sfc_vblank_flag_end() {
+	ppu_.status |= ~(uint8_t)SFC_PPU2000_VBlank;
+}
+
+void sfc_famicom_t::sfc_do_vblank() {
+	sfc_vblank_flag_start();
+	if (ppu_.ctrl&(uint8_t)SFC_PPU2000_NMIGen) {
+		cpu_.sfc_operation_NMI();
+	}
+}
+
