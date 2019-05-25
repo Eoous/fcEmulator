@@ -45,8 +45,8 @@ const union sfc_palette_data {
 enum sfc_ppu_flag {
 	SFC_PPU2000_NMIGen=0x80,	//[0x2000]VBlank期间是否产生NMI
 	SFC_PPU2000_Sp8x16=0x20,	//[0x2000]精灵位8x16(1),还是8x8(0)
-	SFC_PPU2000_BgTab1=0x10,	//[0x2000]背景调色板表地址$1000(1),$0000(0)
-	SFC_PPU2000_SpTab1=0x08,	//[0x2000]精灵调色板表地址$1000(1),$0000(0),8x16模式下被忽略
+	SFC_PPU2000_BgTabl=0x10,	//[0x2000]背景调色板表地址$1000(1),$0000(0)
+	SFC_PPU2000_SpTabl=0x08,	//[0x2000]精灵调色板表地址$1000(1),$0000(0),8x16模式下被忽略
 	SFC_PPU2000_VINC32=0x04,	//[0x2000]VRAM读写增加值32(1),1(0)
 
 	SFC_PPU2000_VBlank=0x80,	//[0x2002]垂直空白间隙标志

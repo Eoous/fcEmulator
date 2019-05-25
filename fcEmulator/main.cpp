@@ -1,89 +1,115 @@
-#include <windows.h>
-#include <D2D1.h>
+#include "sfc_famicom_t.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <crtdbg.h>
+#include "sfc_ppu_t.h"
+#include "common\d2d_interface1.h"
 
-#define SAFE_RELEASE(P) if(P){P->Release() ; P = NULL ;}
+uint32_t palette_data[16];
 
-ID2D1Factory* pD2DFactory = NULL; // Direct2D factory
-ID2D1HwndRenderTarget* pRenderTarget = NULL;   // Render target
-ID2D1SolidColorBrush* pBlackBrush = NULL; // A black brush, reflect the line color
 
-RECT rc; // Render area
-HWND g_Hwnd; // Window handle
+uint32_t get_pixel(unsigned x, unsigned y, const uint8_t* nt, const uint8_t* bg) {
+	// 获取所在名称表
+	const unsigned id = (x >> 3) + (y >> 3) * 32;
+	const uint32_t name = nt[id];
+	// 查找对应图样表
+	const uint8_t* nowp0 = bg + name * 16;
+	const uint8_t* nowp1 = nowp0 + 8;
+	// Y坐标为平面内偏移
+	const int offset = y & 0x7;
+	const uint8_t p0 = nowp0[offset];
+	const uint8_t p1 = nowp1[offset];
+	// X坐标为字节内偏移
+	const uint8_t shift = (~x) & 0x7;
+	const uint8_t mask = 1 << shift;
+	// 计算低二位
+	const uint8_t low = ((p0 & mask) >> shift) | ((p1 & mask) >> shift << 1);
+	// 计算所在属性表
+	const unsigned aid = (x >> 5) + (y >> 5) * 8;
+	const uint8_t attr = nt[aid + (32 * 30)];
+	// 获取属性表内位偏移
+	const uint8_t aoffset = ((x & 0x10) >> 3) | ((y & 0x10) >> 2);
+	// 计算高两位
+	const uint8_t high = (attr & (3 << aoffset)) >> aoffset << 2;
+	// 合并作为颜色
+	const uint8_t index = high | low;
 
-void createD2DResource(HWND hWnd) {
-	if (!pRenderTarget) {
-		HRESULT hr;
-		//创建工厂对象
-		hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
+	return palette_data[index];
+}
 
-		if (FAILED(hr)) {
-			MessageBox(hWnd, "Create D2D factory failed!", "Error", 0);
-			return;
+
+/// <summary>
+/// 主渲染
+/// </summary>
+/// <param name="rgba">The RGBA.</param>
+extern void main_render(void* rgba,sfc_famicom_t& famicom) {
+	uint32_t* data = (uint32_t*)rgba;
+
+	for (int i = 0; i != 10000; ++i)
+		famicom.cpu_.sfc_cpu_execute_one();
+
+	famicom.sfc_do_vblank();
+
+	// 生成调色板颜色
+	{
+		for (int i = 0; i != 16; ++i) {
+			palette_data[i] = sfc_stdpalette[famicom.ppu_.spindexes[i]].data;
 		}
-
-		GetClientRect(hWnd, &rc);
-		//创建Render target
-		hr = pD2DFactory->CreateHwndRenderTarget(
-			D2D1::RenderTargetProperties(),		//第一个参数 属性  ，这个函数是默认属性
-			D2D1::HwndRenderTargetProperties(	//第二个参数是Hwnd类型 有三个参数，第一个是窗口句柄；第二个是Render target大小；第三个是Present选项，这里使用默认值
-				hWnd,
-				D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top)),
-			&pRenderTarget);
-		if (FAILED(hr))
-		{
-			MessageBox(hWnd, "Create render target failed!", "Error", 0);
-			return;
-		}
-		//创建Brush
-		hr = pRenderTarget->CreateSolidColorBrush(
-			D2D1::ColorF(D2D1::ColorF::Red),
-			&pBlackBrush);
-		if (FAILED(hr)) {
-			MessageBox(hWnd, "Create brush failed!", "Error", 0);
-			return;
-		}
+		palette_data[4 * 1] = palette_data[0];
+		palette_data[4 * 2] = palette_data[0];
+		palette_data[4 * 3] = palette_data[0];
+	}
+	// 背景
+	const uint8_t* now = famicom.ppu_.banks[8];
+	const uint8_t* bgp = famicom.ppu_.banks[
+		famicom.ppu_.ctrl & SFC_PPU2000_BgTabl ? 4 : 0];
+	for (unsigned i = 0; i != 256 * 240; ++i) {
+		data[i] = get_pixel(i & 0xff, i >> 8, now, bgp);
 	}
 }
 
-//绘制矩形
-void drawRectangle() {
-	createD2DResource(g_Hwnd);
 
-	pRenderTarget->BeginDraw();
+int main(void) {
+	std::shared_ptr<sfc_famicom_t> famicom = sfc_famicom_t::getInstance(nullptr);
 
-	//clear bg color white
-	pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
+	auto test = famicom->get_rom_info();
 
-	//draw rc
-	pRenderTarget->DrawRectangle(D2D1::RectF(100.f, 100.f, 500.f, 500.f),
-		pBlackBrush);
-	HRESULT hr = pRenderTarget->EndDraw();
+	printf("ROM:PRG-ROM: %d x 16kb	CHR-ROM %d x 8kb	Mapper: %03d\n",
+		(int)test.count_prgrom16kb,
+		(int)test.count_chrrom_8kb,
+		(int)test.mapper_number);
+	uint16_t v0 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_NMI + 0);
+	uint16_t d0 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_NMI + 1);
+	v0 |= d0 << 8;
+	uint16_t v1 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 0);
+	uint16_t d1 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 1);
+	v1 |= d1 << 8;
+	uint16_t v2 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_IRQBRK + 0);
+	uint16_t d2 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_IRQBRK + 1);
+	v2 |= d2 << 8;
 
-}
+	printf("ROM: NMI: $%04X  RESET: $%04X  IRQ/BRK: $%04X\n", (int)v0, (int)v1, (int)v2);
 
-void cleanUp() {
-	SAFE_RELEASE(pRenderTarget);
-	SAFE_RELEASE(pBlackBrush);
-	SAFE_RELEASE(pD2DFactory);
-}
+	//===================================
+	char b0[48], b1[48], b2[48];
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpcmdLine, int nCmdShow)
-{
-	WNDCLASSEX winClass;
-	winClass.lpszClassName = "Direct2D";
-	winClass.cbSize = sizeof(WNDCLASSEX);
-	winClass.style = CS_HREDRAW | CS_VREDRAW;
-	winClass.lpfnWndProc = WndProc;
-	winClass.hInstance = hInstance;
-	winClass.hIcon = NULL;
-	winClass.hIconSm = NULL;
-	winClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-	winClass.hbrBackground = NULL;
-	winClass.lpszMenuName = NULL;
-	winClass.cbClsExtra = 0;
-	winClass.cbWndExtra = 0;
+	famicom->sfc_fc_disassembly(v0, b0);
+	famicom->sfc_fc_disassembly(v1, b1);
+	famicom->sfc_fc_disassembly(v2, b2);
+	printf(
+		"NMI:     %s\n"
+		"RESET:   %s\n"
+		"IRQ/BRK: %s\n",
+		b0, b1, b2
+	);
+	printf("\n");
 
 
 
+	main_cpp();
+
+
+	getchar();
 	return 0;
+
 }
