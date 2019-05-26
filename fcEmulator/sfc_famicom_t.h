@@ -37,6 +37,10 @@ public:
 
 
 	void sfc_before_execute();
+	//=============
+	uint32_t palette_data[16];
+
+
 
 //========================================================
 //	cpu部分
@@ -56,12 +60,11 @@ public:
 	void sfc_vblank_flag_start();
 	//结束垂直空白标记
 	void sfc_vblank_flag_end();
-
-
-
 	//不可屏蔽中断 垂直空白
 	void sfc_do_vblank();
 
+	//载入1kCHR ROM
+	void sfc_load_chrrom_1k(int des, int src);
 private:
 	// 成员变量
 	void *argument;
