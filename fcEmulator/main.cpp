@@ -23,8 +23,8 @@ uint32_t get_pixel(unsigned x, unsigned y, const uint8_t* nt, const uint8_t* bg)
 	const unsigned id = (x >> 3) + (y >> 3) * 32;
 	const uint32_t name = nt[id];
 	// 查找对应图样表
-	const uint8_t* nowp0 = bg + name * 16;
-	const uint8_t* nowp1 = nowp0 + 8;
+	const uint8_t* nowp0 = bg + name * 16;		//前8字节代表2位中的低位
+	const uint8_t* nowp1 = nowp0 + 8;			//后8字节代表2位中的高位
 	// Y坐标为平面内偏移
 	const int offset = y & 0x7;
 	const uint8_t p0 = nowp0[offset];
@@ -55,15 +55,17 @@ uint32_t get_pixel(unsigned x, unsigned y, const uint8_t* nt, const uint8_t* bg)
 void main_render(void* rgba,sfc_famicom_t& famicom)noexcept {
 	uint32_t* data = (uint32_t*)rgba;
 
-	for (int i = 0; i != 10000; ++i)
+	for (int i = 0; i != 10; ++i)
+	{
+		famicom.sfc_before_execute();
 		famicom.cpu_.sfc_cpu_execute_one();
-
+	}
 	famicom.sfc_do_vblank();
 
 	// 生成调色板颜色
 	{
 		for (int i = 0; i != 16; ++i) {
-			palette_data[i] = sfc_stdpalette[famicom.ppu_.spindexes[i]].data;
+			palette_data[i] =sfc_stdpalette[famicom.ppu_.spindexes[i]].data;
 		}
 		palette_data[4 * 1] = palette_data[0];
 		palette_data[4 * 2] = palette_data[0];
