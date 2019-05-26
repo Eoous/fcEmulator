@@ -71,7 +71,7 @@ uint8_t sfc_ppu_t::sfc_read_ppu_register_via_cpu(uint16_t address) {
 		// 0x2002: Status ($2002) < read
 		// 只读状态寄存器
 		data = status;
-		status &= ~(uint8_t)SFC_PPU2000_VBlank;
+		status &= ~(uint8_t)SFC_PPU2002_VBlank;
 		break;
 	case 3:
 		// 0x2003: OAM address port ($2003) > write
