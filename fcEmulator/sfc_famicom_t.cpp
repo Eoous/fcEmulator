@@ -15,12 +15,12 @@ sfc_ecode sfc_famicom_t::sfc_famicom_init() {
 	assert(this && "bad famicom");
 
 	//清空数据
-	memset(&rom_info, 0, sizeof(rom_info));
+	memset(this, 0, sizeof(sfc_famicom_t));
 
 	//初步BANK
 	cpu_.prg_banks[0] = cpu_.main_memory;
 	cpu_.prg_banks[3] = cpu_.save_memory;
-
+	cpu_.pppu_ = &ppu_;
 	return sfc_load_new_rom();
 	return SFC_ERROR_OK;
 }
@@ -134,6 +134,9 @@ sfc_ecode sfc_famicom_t::sfc_mapper_00_reset() {
 	sfc_load_prgrom_8k(2, id2 + 0);
 	sfc_load_prgrom_8k(3, id2 + 1);
 
+	for (int i = 0; i != 8; ++i) {
+		sfc_load_chrrom_1k(i, i);
+	}
 	return SFC_ERROR_OK;
 }
 
@@ -294,3 +297,7 @@ void sfc_famicom_t::sfc_do_vblank() {
 	}
 }
 
+//
+void sfc_famicom_t::sfc_load_chrrom_1k(int des, int src) {
+	ppu_.banks[des] = rom_info.data_chrrom + 1024 * src;
+}
