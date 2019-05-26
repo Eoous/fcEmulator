@@ -3,10 +3,20 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 #include "sfc_ppu_t.h"
-#include "common\d2d_interface1.h"
-
+#include "common\d2d_interface.h"
 uint32_t palette_data[16];
+SFC_EXTERN_C void user_input(int index, unsigned char data) SFC_NOEXCEPT {
 
+}
+SFC_EXTERN_C int sub_render(void* rgba) SFC_NOEXCEPT {
+	return 0;
+}
+SFC_EXTERN_C void qsave() SFC_NOEXCEPT {
+
+}
+SFC_EXTERN_C void qload() SFC_NOEXCEPT {
+
+}
 
 uint32_t get_pixel(unsigned x, unsigned y, const uint8_t* nt, const uint8_t* bg) {
 	// 获取所在名称表
@@ -42,7 +52,7 @@ uint32_t get_pixel(unsigned x, unsigned y, const uint8_t* nt, const uint8_t* bg)
 /// 主渲染
 /// </summary>
 /// <param name="rgba">The RGBA.</param>
-extern void main_render(void* rgba,sfc_famicom_t& famicom) {
+void main_render(void* rgba,sfc_famicom_t& famicom)noexcept {
 	uint32_t* data = (uint32_t*)rgba;
 
 	for (int i = 0; i != 10000; ++i)
@@ -62,14 +72,14 @@ extern void main_render(void* rgba,sfc_famicom_t& famicom) {
 	// 背景
 	const uint8_t* now = famicom.ppu_.banks[8];
 	const uint8_t* bgp = famicom.ppu_.banks[
-		famicom.ppu_.ctrl & SFC_PPU2000_BgTabl ? 4 : 0];
+		(famicom.ppu_.ctrl & SFC_PPU2000_BgTabl ? 4 : 0)];
 	for (unsigned i = 0; i != 256 * 240; ++i) {
 		data[i] = get_pixel(i & 0xff, i >> 8, now, bgp);
 	}
 }
 
 
-int main(void) {
+int main() {
 	std::shared_ptr<sfc_famicom_t> famicom = sfc_famicom_t::getInstance(nullptr);
 
 	auto test = famicom->get_rom_info();
@@ -104,11 +114,7 @@ int main(void) {
 	);
 	printf("\n");
 
-
-
-	main_cpp();
-
-
+	main_cpp(*famicom);
 	getchar();
 	return 0;
 
