@@ -159,7 +159,7 @@ public:
 	uint8_t save_memory[8 * 1024];
 
 	//显存
-	uint8_t video_memory[2 * 1024];
+	uint8_t video_memory[2 * 1024];		//（FC的显存只有2kb，只能支持2屏幕）
 
 	//4屏用额外显存
 	uint8_t video_memory_ex[2 * 1024];
