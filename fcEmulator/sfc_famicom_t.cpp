@@ -134,7 +134,7 @@ sfc_ecode sfc_famicom_t::sfc_mapper_00_reset() {
 	sfc_load_prgrom_8k(2, id2 + 0);
 	sfc_load_prgrom_8k(3, id2 + 1);
 
-	for (int i = 0; i != 8; ++i) {
+	for (int i = 0; i != 8; ++i) {				//CHR-ROM 角色只读存储器 放入PPU，8k为1个单位 此处应该是加载图样表(贴图)共8kb
 		sfc_load_chrrom_1k(i, i);
 	}
 	return SFC_ERROR_OK;
@@ -215,7 +215,7 @@ sfc_ecode sfc_famicom_t::sfc_famicom_reset() {
 	// 初始化寄存器
 	const uint8_t pcl = cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 0);
 	const uint8_t pch = cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 1);
-	cpu_.registers_.get_program_counter() = (uint16_t)pcl | (uint16_t)pch << 8;			//设置pc初始地址c004 下面会重置成c000 ,如果从c004开始会报错
+	cpu_.registers_.get_program_counter() = (uint16_t)pcl | (uint16_t)pch << 8;			//设置pc初始地址c004 (下面会重置成c000) ,如果从c004开始会报错(可能因为有个没有完善)
 	cpu_.registers_.get_accumulator() = 0;
 	cpu_.registers_.get_x_index() = 0;
 	cpu_.registers_.get_y_index() = 0;
@@ -225,7 +225,7 @@ sfc_ecode sfc_famicom_t::sfc_famicom_reset() {
 	//调色板
 	//名称表
 	sfc_setup_nametable_bank();
-	//镜像
+	//镜像	$3000 - $3eff 大小$0f00 为$2000 - $2eff镜像
 	ppu_.banks[0xc] = ppu_.banks[0x8];
 	ppu_.banks[0xd] = ppu_.banks[0x9];
 	ppu_.banks[0xe] = ppu_.banks[0xa];
@@ -257,10 +257,10 @@ void sfc_famicom_t::sfc_before_execute() {
 
 //===========================
 //step 4
-void sfc_famicom_t::sfc_setup_nametable_bank() {
-	//four screens == 4屏
-	if (rom_info.four_screen) {
-		ppu_.banks[0x8] = cpu_.video_memory + 0x400 * 0;
+void sfc_famicom_t::sfc_setup_nametable_bank() {				//加载名称表 nameteble  banks[8]=$2000 - $23ff (1kb)	名称表0
+	//four screens == 4屏																banks[9]=$2400 - $27ff			名称表1
+	if (rom_info.four_screen) {														//	banks[a]=$2800 - $2bff			名称表2
+		ppu_.banks[0x8] = cpu_.video_memory + 0x400 * 0;							//	banks[b]=$2c00 - $2fff			名称表3
 		ppu_.banks[0x9] = cpu_.video_memory + 0x400 * 1;
 		ppu_.banks[0xa] = cpu_.video_memory_ex + 0x400 * 0;
 		ppu_.banks[0xb] = cpu_.video_memory_ex + 0x400 * 1;
@@ -274,7 +274,7 @@ void sfc_famicom_t::sfc_setup_nametable_bank() {
 	}
 	//纵版
 	else {
-		ppu_.banks[0x8] = cpu_.video_memory + 0x400 * 0;
+		ppu_.banks[0x8] = cpu_.video_memory + 0x400 * 0;		
 		ppu_.banks[0x9] = cpu_.video_memory + 0x400 * 0;
 		ppu_.banks[0xa] = cpu_.video_memory + 0x400 * 1;
 		ppu_.banks[0xb] = cpu_.video_memory + 0x400 * 1;
@@ -283,11 +283,11 @@ void sfc_famicom_t::sfc_setup_nametable_bank() {
 
 //开始垂直空白标记
 void sfc_famicom_t::sfc_vblank_flag_start(){
-	ppu_.status |= (uint8_t)SFC_PPU2000_VBlank;
+	ppu_.status |= (uint8_t)SFC_PPU2002_VBlank;
 }
 
 void sfc_famicom_t::sfc_vblank_flag_end() {
-	ppu_.status |= ~(uint8_t)SFC_PPU2000_VBlank;
+	ppu_.status |= ~(uint8_t)SFC_PPU2002_VBlank;
 }
 
 void sfc_famicom_t::sfc_do_vblank() {
