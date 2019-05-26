@@ -34,11 +34,12 @@ uint8_t sfc_cpu::sfc_read_cpu_address(uint16_t address) {
 		return main_memory[address & (uint16_t)0x07ff];
 	case 1:
 		//高三位为1，[$2000,$4000) :PPU寄存器，8字节步进镜像
-		assert(!"NOT IMPL");
-		return 0;
+		return pppu_->sfc_read_ppu_register_via_cpu(address);
 	case 2:
 		//高三位为2，[$4000,$6000) :pAPU寄存器 扩展ROM区
-		assert(!"NOT IMPL");
+		if (address < 0x4020) {
+		}
+		else assert(!"NOT IMPL");
 		return 0;
 	case 3:
 		//高三位为3，[$6000,$8000) :存档 SRAM区
@@ -81,11 +82,15 @@ void sfc_cpu::sfc_write_cpu_address(uint16_t address, uint8_t data) {
 		return;
 	case 1:
 		//高三位为1，[$2000,$4000) :PPU寄存器，8字节步进镜像
-		assert(!"NOT IMPL");
+		pppu_->sfc_write_ppu_register_via_cpu(address, data);		
 		return;
 	case 2:
 		//高三位为2，[$4000,$6000) :pAPU寄存器 扩展ROM区
-		assert(!"NOT IMPL");
+		// 前0x20字节为APU, I / O寄存器
+		if (address < 0x4020) {
+
+		}
+		else assert(!"NOT IMPL");
 		return;
 	case 3:
 		//高三位为3，[$6000,$8000) :存档 SRAM区
