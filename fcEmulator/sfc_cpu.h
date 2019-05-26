@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include "sfc_6502.h"
-
+#include "sfc_ppu_t.h"
 
 // nes的cpu把最后几个地址称为向量
 enum sfc_cpu_vector {
@@ -167,6 +167,7 @@ public:
 	//主内存
 	uint8_t main_memory[2 * 1024];
 
+	sfc_ppu_t* pppu_;
 //====================================
 	void sfc_cpu_execute_one();
 
