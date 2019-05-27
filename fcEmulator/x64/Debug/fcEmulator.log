@@ -2,6 +2,7 @@
 d:\yoshino\documents\github\fcemulator\fcemulator\sfc_famicom_t.cpp(34): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: 参见“fopen”的声明
   sfc_cpu.cpp
+  sfc_6502.cpp
   main.cpp
   正在生成代码...
   fcEmulator.vcxproj -> D:\Yoshino\Documents\GitHub\fcEmulator\x64\Debug\fcEmulator.exe
