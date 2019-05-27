@@ -31,3 +31,10 @@
 *.out
 *.app
 .vs/fcEmulator/v14/.suo
+.vs/fcEmulator/v14/.suo
+*.db
+*.vcxproj
+*.filters
+*.enc
+*.log
+*.idb
