@@ -33,6 +33,9 @@
     <ClInclude Include="sfc_ppu_t.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="common\d2d_interface.h">
+      <Filter>资源文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -49,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="sfc_ppu_t.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="common\d2d_draw.cpp">
+      <Filter>资源文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

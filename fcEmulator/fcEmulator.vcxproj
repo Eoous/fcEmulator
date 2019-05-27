@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="common\d2d_interface.h" />
     <ClInclude Include="sfc_6502.h" />
     <ClInclude Include="sfc_code.h" />
     <ClInclude Include="sfc_cpu.h" />
@@ -150,6 +151,7 @@
     <ClInclude Include="sfc_rom.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="common\d2d_draw.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="sfc_6502.cpp" />
     <ClCompile Include="sfc_cpu.cpp" />
