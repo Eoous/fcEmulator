@@ -38,3 +38,5 @@
 *.enc
 *.log
 *.idb
+*.db
+*.pdb
