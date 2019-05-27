@@ -57,7 +57,7 @@ void main_render(void* rgba,sfc_famicom_t& famicom)noexcept {
 
 	for (int i = 0; i != 10000; ++i)
 	{
-		//famicom.sfc_before_execute();
+		famicom.sfc_before_execute();
 		famicom.cpu_.sfc_cpu_execute_one();
 	}
 	famicom.sfc_do_vblank();
