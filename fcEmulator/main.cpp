@@ -55,7 +55,7 @@ uint32_t get_pixel(unsigned x, unsigned y, const uint8_t* nt, const uint8_t* bg)
 void main_render(void* rgba,sfc_famicom_t& famicom)noexcept {
 	uint32_t* data = (uint32_t*)rgba;
 
-	for (int i = 0; i != 10; ++i)
+	for (int i = 0; i != 10000; ++i)
 	{
 		famicom.sfc_before_execute();
 		famicom.cpu_.sfc_cpu_execute_one();
