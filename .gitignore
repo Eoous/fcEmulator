@@ -31,7 +31,6 @@
 *.out
 *.app
 .vs/fcEmulator/v14/.suo
-.vs/fcEmulator/v14/.suo
 *.db
 *.vcxproj
 *.filters
@@ -45,3 +44,6 @@
 *.idb
 *.opendb
 *.db
+Debug
+x64
+.vscode
