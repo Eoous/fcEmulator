@@ -41,3 +41,7 @@
 *.db
 *.pdb
 *.tlog
+*.pdb
+*.idb
+*.opendb
+*.db
