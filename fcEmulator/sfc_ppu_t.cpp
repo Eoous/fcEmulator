@@ -137,11 +137,12 @@ void sfc_ppu_t::sfc_write_ppu_register_via_cpu(uint16_t address, uint8_t data) {
 	case 6:
 		// 0x2006: Address ($2006) >> write x2
 		// PPU 地址寄存器 - 双写
-		// 写入高字节
+		// 调试显示以下正确
+		// 写入低字节
 		if (writex2 & 1) {
 			vramaddr = (vramaddr & (uint16_t)0xFF00) | (uint16_t)data;
 		}
-		// 写入低字节
+		// 写入高字节
 		else {
 			vramaddr = (vramaddr & (uint16_t)0x00FF) | ((uint16_t)data << 8);
 		}
