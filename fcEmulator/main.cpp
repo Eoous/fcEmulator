@@ -25,16 +25,25 @@ uint32_t get_pixel(unsigned x, unsigned y, const uint8_t* nt, const uint8_t* bg)
 	// 查找对应图样表
 	const uint8_t* nowp0 = bg + name * 16;		//前8字节代表2位中的低位
 	const uint8_t* nowp1 = nowp0 + 8;			//后8字节代表2位中的高位
-	// Y坐标为平面内偏移
+	// Y坐标为平面内偏移						  共8个字节 y为第offset个字节
 	const int offset = y & 0x7;
 	const uint8_t p0 = nowp0[offset];
 	const uint8_t p1 = nowp1[offset];
-	// X坐标为字节内偏移
-	const uint8_t shift = (~x) & 0x7;
-	const uint8_t mask = 1 << shift;
-	// 计算低二位
+	/* X坐标为字节内偏移(字节内对应pixel)
+	0 - 111		1 - 110		2 - 101		...
+	1000 0000	0100 0000	0010 0000   ...
+	*/
+	const uint8_t shift = (~x) & 0x7;			
+	const uint8_t mask = 1 << shift;					 
+	/* 计算低二位	
+	mask已经算出来是第几位是1了 p0和p1里面数只可能是1或0
+	对应像素&运算后也是1或0
+	*/
 	const uint8_t low = ((p0 & mask) >> shift) | ((p1 & mask) >> shift << 1);
-	// 计算所在属性表
+	/* 计算所在属性表
+	每个属性表里面有4个tiles
+	*/ 
+	// 第aid个attr
 	const unsigned aid = (x >> 5) + (y >> 5) * 8;
 	const uint8_t attr = nt[aid + (32 * 30)];
 	// 获取属性表内位偏移
