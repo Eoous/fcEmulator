@@ -38,6 +38,7 @@ uint8_t sfc_cpu::sfc_read_cpu_address(uint16_t address) {
 	case 2:
 		//高三位为2，[$4000,$6000) :pAPU寄存器 扩展ROM区
 		if (address < 0x4020) {
+			return sfc_read_cpu_address4020(address);
 		}
 		else assert(!"NOT IMPL");
 		return 0;
@@ -88,7 +89,7 @@ void sfc_cpu::sfc_write_cpu_address(uint16_t address, uint8_t data) {
 		//高三位为2，[$4000,$6000) :pAPU寄存器 扩展ROM区
 		// 前0x20字节为APU, I / O寄存器
 		if (address < 0x4020) {
-
+			sfc_write_cpu_address4020(address, data);
 		}
 		else assert(!"NOT IMPL");
 		return;
@@ -160,4 +161,35 @@ void sfc_cpu::sfc_operation_NMI() {
 	const uint8_t pcl2 = sfc_read_cpu_address(SFC_VECTOR_NMI + 0);
 	const uint8_t pch2 = sfc_read_cpu_address(SFC_VECTOR_NMI + 1);
 	registers_.get_program_counter() = (uint16_t)pcl2 | (uint16_t)pch2 << 8;
+}
+
+
+//读取CPU地址数据4020
+uint8_t sfc_cpu::sfc_read_cpu_address4020(uint16_t address) {
+	uint8_t data = 0;
+	switch (address & (uint16_t)0x1f) {
+	case 0x16:
+		data = (button_states + 0)[button_index_1 & button_index_mask];
+		++button_index_1;
+		break;
+	case 0x17:
+		data = (button_states + 8)[button_index_2 & button_index_mask];
+		++button_index_2;
+		break;
+	}
+
+	return data;
+}
+
+//写入CPU地址数据4020
+void sfc_cpu::sfc_write_cpu_address4020(uint16_t address, uint8_t data) {
+	switch (address & (uint16_t)0x1f) {
+	case 0x16:
+		button_index_mask = (data & 1) ? 0x0 : 0x7;
+		if (data & 1) {
+			button_index_1 = 0;
+			button_index_2 = 0;
+		}
+		break;
+	}
 }
