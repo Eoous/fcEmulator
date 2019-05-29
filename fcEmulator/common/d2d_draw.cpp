@@ -103,7 +103,7 @@ extern "C" void main_cpp(sfc_famicom_t& famicom) noexcept {
 
 static const unsigned sc_key_map[16] = {
     // A, B, Select, Start, Up, Down, Left, Right
-    'J', 'K', 'U', 'I', 'W', 'S', 'A', 'D',
+    'J', 'K', 'Q', 'E', 'W', 'S', 'A', 'D',
     // A, B, Select, Start, Up, Down, Left, Right
     VK_NUMPAD2, VK_NUMPAD3, VK_NUMPAD5, VK_NUMPAD6, 
     VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT,
