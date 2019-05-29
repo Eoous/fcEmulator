@@ -149,6 +149,11 @@ public:
 	//write cpu address
 	void sfc_write_cpu_address(uint16_t address, uint8_t data);
 
+	//读4020
+	uint8_t sfc_read_cpu_address4020(uint16_t address);
+
+	void sfc_write_cpu_address4020(uint16_t address, uint8_t data);
+
 	//寄存器
 	sfc_cpu_register_t registers_;
 
@@ -168,7 +173,16 @@ public:
 	uint8_t main_memory[2 * 1024];
 
 	sfc_ppu_t* pppu_;
-//====================================
+	//==============================================
+	// 手柄序列状态#1
+	uint16_t            button_index_1;
+	// 手柄序列状态#2
+	uint16_t            button_index_2;
+	// 手柄序列状态
+	uint16_t            button_index_mask;
+	// 手柄按钮状态
+	uint8_t             button_states[16];
+	//====================================
 	void sfc_cpu_execute_one();
 
 	//NMI - 不可屏蔽中断
