@@ -4,9 +4,16 @@
 #include <crtdbg.h>
 #include "sfc_ppu_t.h"
 #include "common\d2d_interface.h"
-uint32_t palette_data[16];
-SFC_EXTERN_C void user_input(int index, unsigned char data) SFC_NOEXCEPT {
+#include <iostream>
 
+
+std::shared_ptr<sfc_famicom_t> p;
+uint32_t palette_data[16];
+
+//接收到键盘上的消息就把对应的信息传给states
+SFC_EXTERN_C void user_input(int index, unsigned char data) SFC_NOEXCEPT {
+	assert(index >= 0 && index < 16);
+	p->cpu_.button_states[index] = data;
 }
 SFC_EXTERN_C int sub_render(void* rgba) SFC_NOEXCEPT {
 	return 0;
@@ -66,7 +73,7 @@ void main_render(void* rgba,sfc_famicom_t& famicom)noexcept {
 
 	for (int i = 0; i != 10000; ++i)
 	{
-		famicom.sfc_before_execute();
+		//famicom.sfc_before_execute();
 		famicom.cpu_.sfc_cpu_execute_one();
 	}
 	famicom.sfc_do_vblank();
@@ -92,9 +99,9 @@ void main_render(void* rgba,sfc_famicom_t& famicom)noexcept {
 
 int main() {
 	std::shared_ptr<sfc_famicom_t> famicom = sfc_famicom_t::getInstance(nullptr);
+	p = famicom;
 
 	auto test = famicom->get_rom_info();
-
 	printf("ROM:PRG-ROM: %d x 16kb	CHR-ROM %d x 8kb	Mapper: %03d\n",
 		(int)test.count_prgrom16kb,
 		(int)test.count_chrrom_8kb,
