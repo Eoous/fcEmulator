@@ -39,6 +39,9 @@
     <ClInclude Include="common\d2d_interface.h">
       <Filter>cpp</Filter>
     </ClInclude>
+    <ClInclude Include="sfc_config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -58,6 +61,9 @@
     </ClCompile>
     <ClCompile Include="common\d2d_draw.cpp">
       <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="sfc_config.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

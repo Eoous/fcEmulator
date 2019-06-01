@@ -145,6 +145,7 @@
     <ClInclude Include="common\d2d_interface.h" />
     <ClInclude Include="sfc_6502.h" />
     <ClInclude Include="sfc_code.h" />
+    <ClInclude Include="sfc_config.h" />
     <ClInclude Include="sfc_cpu.h" />
     <ClInclude Include="sfc_famicom_t.h" />
     <ClInclude Include="sfc_ppu_t.h" />
@@ -154,6 +155,7 @@
     <ClCompile Include="common\d2d_draw.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="sfc_6502.cpp" />
+    <ClCompile Include="sfc_config.cpp" />
     <ClCompile Include="sfc_cpu.cpp" />
     <ClCompile Include="sfc_famicom_t.cpp" />
     <ClCompile Include="sfc_ppu_t.cpp" />
