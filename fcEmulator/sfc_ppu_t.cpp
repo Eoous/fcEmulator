@@ -156,3 +156,4 @@ void sfc_ppu_t::sfc_write_ppu_register_via_cpu(uint16_t address, uint8_t data) {
 		break;
 	}
 }
+

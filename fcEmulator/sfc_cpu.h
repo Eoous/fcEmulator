@@ -148,11 +148,13 @@ public:
 	uint8_t sfc_read_cpu_address(uint16_t address);
 	//write cpu address
 	void sfc_write_cpu_address(uint16_t address, uint8_t data);
-
+	//================================================================
 	//读4020
 	uint8_t sfc_read_cpu_address4020(uint16_t address);
 
 	void sfc_write_cpu_address4020(uint16_t address, uint8_t data);
+	//================================================================
+	const uint8_t* sfc_get_dma_address(uint8_t data);
 
 	//寄存器
 	sfc_cpu_register_t registers_;

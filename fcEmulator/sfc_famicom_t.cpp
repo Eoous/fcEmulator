@@ -31,7 +31,7 @@ void sfc_famicom_t::sfc_famicom_uninit() {
 
 sfc_ecode sfc_famicom_t::sfc_load_default_rom() {
 	assert(rom_info.data_prgrom == nullptr && "FREE FIRST");
-	FILE *const file = fopen("nestest.nes", "rb");
+	FILE *const file = fopen("color_test.nes", "rb");
 
 	if (!file) {
 		return SFC_ERROR_FILE_NOT_FOUNT;

@@ -164,6 +164,32 @@ void sfc_cpu::sfc_operation_NMI() {
 }
 
 
+
+
+//====================================================
+//获取DMA地址
+const uint8_t* sfc_cpu::sfc_get_dma_address(uint8_t data) {
+	const uint16_t offset = ((uint16_t)(data & 0x07) << 8);
+	switch (data >> 5) {
+	default:
+	case 1:
+		//ppu register
+		assert(!"ppu reg!");
+	case 2:
+		//扩展区
+		assert(!"TODO");
+	case 0:
+		//main memory
+		return &main_memory[offset];
+	case 3:
+		//save SRAM
+		return &save_memory[offset];
+	case 4:case 5:case 6:case 7:
+		//高一位为1， [$8000, $10000) 程序PRG-ROM区
+		return (prg_banks[data >> 5]) + offset;
+	}
+}
+//==============================================================
 //读取CPU地址数据4020
 uint8_t sfc_cpu::sfc_read_cpu_address4020(uint16_t address) {
 	uint8_t data = 0;
@@ -181,9 +207,15 @@ uint8_t sfc_cpu::sfc_read_cpu_address4020(uint16_t address) {
 	return data;
 }
 
+
+
 //写入CPU地址数据4020
 void sfc_cpu::sfc_write_cpu_address4020(uint16_t address, uint8_t data) {
 	switch (address & (uint16_t)0x1f) {
+	case 0x14:
+		//sprites RAM直接存储器访问
+		memcpy(pppu_->sprites, sfc_get_dma_address(data), 256);
+		break;
 	case 0x16:
 		button_index_mask = (data & 1) ? 0x0 : 0x7;
 		if (data & 1) {
