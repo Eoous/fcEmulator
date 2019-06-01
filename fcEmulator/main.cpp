@@ -170,8 +170,8 @@ int main() {
 	uint16_t v1 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 0);
 	uint16_t d1 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 1);
 	v1 |= d1 << 8;
-	uint16_t v2 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_IRQBRK + 0);
-	uint16_t d2 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_IRQBRK + 1);
+	uint16_t v2 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_IRQ + 0);
+	uint16_t d2 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_IRQ + 1);
 	v2 |= d2 << 8;
 
 	printf("ROM: NMI: $%04X  RESET: $%04X  IRQ/BRK: $%04X\n", (int)v0, (int)v1, (int)v2);
