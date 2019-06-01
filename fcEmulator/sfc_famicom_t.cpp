@@ -1,5 +1,25 @@
 #include "sfc_famicom_t.h"
 
+//===========================================
+//config 信息
+//NTSC制式 配置信息
+constexpr sfc_config_t SFC_CONFIG_NTSC(1789773.f,
+	60,
+	1364,
+	1024,
+	340,
+	240,
+	20);
+//PAL制式 配置信息
+constexpr sfc_config_t SFC_CONFIG_PAL(1662607.f,
+	50,
+	1362,
+	1024,
+	338,
+	312,
+	70);
+
+
 sfc_famicom_t::sfc_famicom_t(void *argument):argument(argument)
 {
 	sfc_famicom_init();
@@ -21,6 +41,9 @@ sfc_ecode sfc_famicom_t::sfc_famicom_init() {
 	cpu_.prg_banks[0] = cpu_.main_memory;
 	cpu_.prg_banks[3] = cpu_.save_memory;
 	cpu_.pppu_ = &ppu_;
+
+	config_ = SFC_CONFIG_NTSC;
+	
 	return sfc_load_new_rom();
 	return SFC_ERROR_OK;
 }
@@ -49,7 +72,8 @@ sfc_ecode sfc_famicom_t::sfc_load_default_rom() {
 
 		if (this_union.u32 == nes_header.id) {
 			const size_t size1 = 16 * 1024 * nes_header.count_prgrom16kb;
-			const size_t size2 = 8 * 1024 * nes_header.count_chrrom_8kb;
+			// 允许没有CHR-ROM(使用CHR-RAM代替)
+			const size_t size2 = 8 * 1024 * std::max(nes_header.count_chrrom_8kb , (uint8_t)1);
 			uint8_t* const ptr = new uint8_t[size1+size2];
 
 			//内存申请成功
@@ -198,11 +222,16 @@ void sfc_famicom_t::sfc_fc_disassembly(uint16_t address, char buf[]) {
 	code.data = 0;
 
 	code.set_op(cpu_.sfc_read_cpu_address(address));
-	code.set_a1(cpu_.sfc_read_cpu_address(address + 1));
-	code.set_a2(cpu_.sfc_read_cpu_address(address + 2));
+	//获取指令长度
+	switch (cpu_.sfc_get_inslen(code.get_op())) {
+	case 3:
+		code.set_a2(cpu_.sfc_read_cpu_address(address + 2));
+	case 2:
+		code.set_a1(cpu_.sfc_read_cpu_address(address + 1));
+	}
 
 	//反汇编
-	code.sfc_6502_disassembly(buf + OFFSET);
+	code.sfc_6502_disassembly(code,buf + OFFSET);
 
 }
 
