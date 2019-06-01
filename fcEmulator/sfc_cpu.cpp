@@ -5,7 +5,14 @@ uint16_t& sfc_cpu_register_t::get_program_counter()
 	return program_counter;
 }
 
-//
+
+//===================================================
+uint8_t sfc_cpu::sfc_read_prgdata(uint16_t address) {
+	assert(((address & (uint16_t)0x8000) == (uint16_t)0x8000) || (address >> 13) == 0);
+	const uint16_t prgaddr = address;
+	return prg_banks[prgaddr >> 13][prgaddr&(uint16_t)0x1fff];
+}
+//read
 uint8_t sfc_cpu::sfc_read_cpu_address(uint16_t address) {
 	/*
 	CPU 地址空间
@@ -109,7 +116,7 @@ void sfc_cpu::sfc_write_cpu_address(uint16_t address, uint8_t data) {
 
 void sfc_cpu::sfc_cpu_execute_one() {
 	const uint8_t opcode = SFC_READ(SFC_PC++);
-
+	uint32_t cycle_add = 0;
 	//每种指令有相对应的寻址模式
 	//LDA 8种 
 	//LDX和LDY 5种
@@ -148,9 +155,10 @@ void sfc_cpu::sfc_cpu_execute_one() {
 			OP(F0, REL, BEQ) OP(F1, INY, SBC) OP(F2, UNK, UNK)  OP(F3, INY, ISB) OP(F4, ZPX, NOP) OP(F5, ZPX, SBC) OP(F6, ZPX, INC) OP(F7, ZPX, ISB)
 			OP(F8, IMP, SED) OP(F9, ABY, SBC) OP(FA, IMP, NOP)  OP(FB, ABY, ISB) OP(FC, ABX, NOP) OP(FD, ABX, SBC) OP(FE, ABX, INC) OP(FF, ABX, ISB)
 	}
+	cpu_cycle_count += cycle_add;
 }
 
-
+//特殊指令 : NMI
 void sfc_cpu::sfc_operation_NMI() {
 	const uint8_t pch = (uint8_t)((SFC_PC) >> 8);
 	const uint8_t pcl = (uint8_t)SFC_PC;
@@ -161,8 +169,25 @@ void sfc_cpu::sfc_operation_NMI() {
 	const uint8_t pcl2 = sfc_read_cpu_address(SFC_VECTOR_NMI + 0);
 	const uint8_t pch2 = sfc_read_cpu_address(SFC_VECTOR_NMI + 1);
 	registers_.get_program_counter() = (uint16_t)pcl2 | (uint16_t)pch2 << 8;
+
+	cpu_cycle_count += 7;
 }
 
+//IRQ_try
+void sfc_cpu::sfc_operation_IRQ_try() {
+	if (SFC_IF) return ;
+	const uint8_t pch = (uint8_t)((SFC_PC) >> 8);
+	const uint8_t pcl = (uint8_t)SFC_PC;
+	SFC_PUSH(pch);
+	SFC_PUSH(pcl);
+	SFC_PUSH(SFC_P | (uint8_t)(SFC_FLAG_R));
+	SFC_IF_SE;
+	const uint8_t pcl2 = SFC_READ_PC(SFC_VECTOR_IRQ + 0);
+	const uint8_t pch2 = SFC_READ_PC(SFC_VECTOR_IRQ + 1);
+	registers_.get_program_counter() = (uint16_t)pcl2 | (uint16_t)pch2 << 8;
+
+	cpu_cycle_count += 7;
+}
 
 
 
@@ -214,7 +239,19 @@ void sfc_cpu::sfc_write_cpu_address4020(uint16_t address, uint8_t data) {
 	switch (address & (uint16_t)0x1f) {
 	case 0x14:
 		//sprites RAM直接存储器访问
-		memcpy(pppu_->sprites, sfc_get_dma_address(data), 256);
+		if (pppu_->oamaddr) {
+			auto dst = pppu_->sprites;
+			const auto len = pppu_->oamaddr;
+			const auto src = sfc_get_dma_address(data);
+			//需要换行
+			memcpy(dst, src + len, len);
+			memcpy(dst + len, src, 256 - len);
+		}
+		else {
+			memcpy(pppu_->sprites, sfc_get_dma_address(data), 256);
+		}
+		cpu_cycle_count += 513;
+		cpu_cycle_count += cpu_cycle_count & 1;
 		break;
 	case 0x16:
 		button_index_mask = (data & 1) ? 0x0 : 0x7;
