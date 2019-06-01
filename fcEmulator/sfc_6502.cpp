@@ -1,8 +1,5 @@
 #include "sfc_6502.h"
-
-
 #define sfc_fallthrough
-
 
 //============================================
 //进制转换
@@ -28,10 +25,11 @@ void sfc_btod(char o[], uint8_t b) {
 }
 //============================
 //反汇编
-void sfc_6502_code_t::sfc_6502_disassembly(char buf[SFC_DISASSEMBLY_BUF_LEN]) {
-	enum{NAME_FIRSH=0,
-	ADDR_FIRSH=NAME_FIRSH+4,
-	LEN=ADDR_FIRSH+9
+void sfc_6502_code_t::sfc_6502_disassembly(sfc_6502_code_t code,char buf[SFC_DISASSEMBLY_BUF_LEN]) {
+	enum{
+		NAME_FIRSH=0,
+		ADDR_FIRSH=NAME_FIRSH+4,
+		LEN=ADDR_FIRSH+9
 	};
 	memset(buf, ' ', LEN);
 	buf[LEN] = ';';
@@ -44,58 +42,60 @@ void sfc_6502_code_t::sfc_6502_disassembly(char buf[SFC_DISASSEMBLY_BUF_LEN]) {
 	buf[NAME_FIRSH + 2] = opname.name[2];
 
 	//查看寻址模式
-	switch (opname.mode) {
+	const auto addrmode = opname.mode_inslen & 0x0f;
+	switch (addrmode)
+	{
 	case SFC_AM_UNK:
-			sfc_fallthrough;
+		sfc_fallthrough;
 	case SFC_AM_IMP:
-		//XXX	;
+		// XXX     ;
 		break;
 	case SFC_AM_ACC:
-		//XXX A	;
+		// XXX A   ;
 		buf[ADDR_FIRSH + 0] = 'A';
 		break;
 	case SFC_AM_IMM:
-		//XXX #$AB
+		// XXX #$AB
 		buf[ADDR_FIRSH + 0] = '#';
 		buf[ADDR_FIRSH + 1] = '$';
-		sfc_btoh(buf + ADDR_FIRSH + 2, a1);
+		sfc_btoh(buf + ADDR_FIRSH + 2, code.a1);
 		break;
 	case SFC_AM_ABS:
-		//XXX $ABCD
+		// XXX $ABCD
 		sfc_fallthrough;
 	case SFC_AM_ABX:
-		//XXX $ABCD,X
+		// XXX $ABCD, X
 		sfc_fallthrough;
 	case SFC_AM_ABY:
-		//XXX $ABCD,Y
-		//REAL
+		// XXX $ABCD, Y
+		// REAL
 		buf[ADDR_FIRSH] = '$';
-		sfc_btoh(buf + ADDR_FIRSH + 1, a2);					//a2是高位
-		sfc_btoh(buf + ADDR_FIRSH + 3, a1);					//a1是低位
-		if (opname.mode == SFC_AM_ABS)break;
+		sfc_btoh(buf + ADDR_FIRSH + 1, code.a2);
+		sfc_btoh(buf + ADDR_FIRSH + 3, code.a1);
+		if (addrmode == SFC_AM_ABS) break;
 		buf[ADDR_FIRSH + 5] = ',';
-		buf[ADDR_FIRSH + 7] = opname.mode == SFC_AM_ABX ? 'X' : 'Y';
+		buf[ADDR_FIRSH + 7] = addrmode == SFC_AM_ABX ? 'X' : 'Y';
 		break;
 	case SFC_AM_ZPG:
-		//XXX $AB
+		// XXX $AB
 		sfc_fallthrough;
 	case SFC_AM_ZPX:
-		//XXX $AB,X
+		// XXX $AB, X
 		sfc_fallthrough;
 	case SFC_AM_ZPY:
-		//XXX $AB,Y
-		//REAL
+		// XXX $AB, Y
+		// REAL
 		buf[ADDR_FIRSH] = '$';
-		sfc_btoh(buf + ADDR_FIRSH + 1, a1);
-		if (opname.mode == SFC_AM_ZPG)break;
+		sfc_btoh(buf + ADDR_FIRSH + 1, code.a1);
+		if (addrmode == SFC_AM_ZPG) break;
 		buf[ADDR_FIRSH + 3] = ',';
-		buf[ADDR_FIRSH + 5] = opname.mode == SFC_AM_ABX ? 'X' : 'Y';
+		buf[ADDR_FIRSH + 5] = addrmode == SFC_AM_ABX ? 'X' : 'Y';
 		break;
 	case SFC_AM_INX:
 		// XXX ($AB, X)
 		buf[ADDR_FIRSH + 0] = '(';
 		buf[ADDR_FIRSH + 1] = '$';
-		sfc_btoh(buf + ADDR_FIRSH + 2, a1);
+		sfc_btoh(buf + ADDR_FIRSH + 2, code.a1);
 		buf[ADDR_FIRSH + 4] = ',';
 		buf[ADDR_FIRSH + 6] = 'X';
 		buf[ADDR_FIRSH + 7] = ')';
@@ -104,7 +104,7 @@ void sfc_6502_code_t::sfc_6502_disassembly(char buf[SFC_DISASSEMBLY_BUF_LEN]) {
 		// XXX ($AB), Y
 		buf[ADDR_FIRSH + 0] = '(';
 		buf[ADDR_FIRSH + 1] = '$';
-		sfc_btoh(buf + ADDR_FIRSH + 2, a1);
+		sfc_btoh(buf + ADDR_FIRSH + 2, code.a1);
 		buf[ADDR_FIRSH + 4] = ')';
 		buf[ADDR_FIRSH + 5] = ',';
 		buf[ADDR_FIRSH + 7] = 'Y';
@@ -113,20 +113,22 @@ void sfc_6502_code_t::sfc_6502_disassembly(char buf[SFC_DISASSEMBLY_BUF_LEN]) {
 		// XXX ($ABCD)
 		buf[ADDR_FIRSH + 0] = '(';
 		buf[ADDR_FIRSH + 1] = '$';
-		sfc_btoh(buf + ADDR_FIRSH + 2, a2);
-		sfc_btoh(buf + ADDR_FIRSH + 4, a1);
+		sfc_btoh(buf + ADDR_FIRSH + 2, code.a2);
+		sfc_btoh(buf + ADDR_FIRSH + 4, code.a1);
 		buf[ADDR_FIRSH + 6] = ')';
 		break;
 	case SFC_AM_REL:
 		// XXX $AB(-085)
 		// XXX $ABCD
 		buf[ADDR_FIRSH + 0] = '$';
+
 		//const uint16_t target = base + int8_t(data.a1);
 		//sfc_btoh(buf + ADDR_FIRSH + 1, uint8_t(target >> 8));
 		//sfc_btoh(buf + ADDR_FIRSH + 3, uint8_t(target & 0xFF));
-		sfc_btoh(buf + ADDR_FIRSH + 1, a1);
+
+		sfc_btoh(buf + ADDR_FIRSH + 1, code.a1);
 		buf[ADDR_FIRSH + 3] = '(';
-		sfc_btod(buf + ADDR_FIRSH + 4, a1);
+		sfc_btod(buf + ADDR_FIRSH + 4, code.a1);
 		buf[ADDR_FIRSH + 8] = ')';
 		break;
 	}
