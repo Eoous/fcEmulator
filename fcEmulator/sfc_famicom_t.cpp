@@ -1,5 +1,7 @@
 #include "sfc_famicom_t.h"
 
+
+
 //===========================================
 //config 信息
 //NTSC制式 配置信息
@@ -43,7 +45,7 @@ sfc_ecode sfc_famicom_t::sfc_famicom_init() {
 	cpu_.pppu_ = &ppu_;
 
 	config_ = SFC_CONFIG_NTSC;
-	
+
 	return sfc_load_new_rom();
 	return SFC_ERROR_OK;
 }
@@ -51,6 +53,8 @@ sfc_ecode sfc_famicom_t::sfc_famicom_init() {
 void sfc_famicom_t::sfc_famicom_uninit() {
 	sfc_free_default_rom();
 }
+
+
 
 sfc_ecode sfc_famicom_t::sfc_load_default_rom() {
 	assert(rom_info.data_prgrom == nullptr && "FREE FIRST");
@@ -329,4 +333,139 @@ void sfc_famicom_t::sfc_do_vblank() {
 //
 void sfc_famicom_t::sfc_load_chrrom_1k(int des, int src) {
 	ppu_.banks[des] = rom_info.data_chrrom + 1024 * src;
+}
+
+//=========================================
+//step7
+void sfc_famicom_t::sfc_render_background_scanline(uint16_t line, const uint8_t sp0[SFC_HEIGHT + (16)], uint8_t * buffer) {
+	//取消背景显示
+	if (!(ppu_.mask&(uint8_t)SFC_PPU2001_Back))return;
+
+	//计算当前偏移量
+	const uint16_t scrollx = (uint16_t)ppu_.scroll[0] + (uint16_t)((ppu_.nametable_select & 1) << 8);
+	const uint16_t scrolly = line + (uint16_t)ppu_.now_scrolly + (uint16_t)((ppu_.nametable_select & 2) ? 240 : 0);
+
+	//由于Y是240一换，需要膜计算
+	const uint16_t scrolly_index0 = scrolly / (uint16_t)240;
+	const uint16_t scrolly_offset = scrolly % (uint16_t)240;
+
+	//计算背景所使用的图样表
+	const uint8_t* const pattern = ppu_.banks[ppu_.ctrl&SFC_PPU2000_BgTabl ? 4 : 0];
+	//检测垂直偏移量确定使用图案表的前一半[8-9]还是后一半[10-11]
+	const uint8_t* table[2];
+
+	const int first_buck = 8 + ((scrolly_index0 & 1) << 1);
+	table[0] = ppu_.banks[first_buck];
+	table[1] = ppu_.banks[first_buck + 1];
+	// 以16像素为单位扫描该行
+	SFC_ALIGNAS(16) uint8_t aligned_buffer[SFC_WIDTH + 16 + 16];
+	{
+		const uint8_t realy = (uint8_t)scrolly_offset;
+		// 保险起见扫描16+1次
+		for (uint16_t i = 0; i != 17; ++i) {
+			const uint16_t realx = scrollx + (i << 4);
+			const uint8_t* nt = table[(realx >> 8) & 1];
+			const uint8_t xunit = (realx & (uint16_t)0xF0) >> 4;
+			// 获取32为单位的调色板索引字节
+			const uint8_t attr = (nt + 32 * 30)[(realy >> 5 << 3) | (xunit >> 1)];
+			// 获取属性表内位偏移
+			const uint8_t aoffset = ((uint8_t)(xunit & 1) << 1) | ((realy & 0x10) >> 2);
+			// 计算高两位
+			const uint8_t high = (attr & (3 << aoffset)) >> aoffset << 3;
+			// 计算图样表位置
+			const uint8_t* too_young = nt + ((uint16_t)xunit << 1) + (uint16_t)(realy >> 3 << 5);
+			const uint8_t too_young0 = too_young[0];
+			const uint8_t too_young1 = too_young[1];
+			// 渲染16个像素
+			sfc_render_background_pixel16(
+				high,
+				pattern + too_young0 * 16 + (realy & 7),
+				pattern + too_young1 * 16 + (realy & 7),
+				aligned_buffer + (i << 4)
+			);
+		}
+		// 将数据复制过去
+		const uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
+		memcpy(buffer, unaligned_buffer, SFC_WIDTH);
+	}
+	// 基于行的精灵0命中测试
+
+	// 已经命中了
+	if (ppu_.status & (uint8_t)SFC_PPU2002_Sp0Hit) return;
+	// 没有必要测试
+	const uint8_t hittest_data = sp0[line];
+	if (!hittest_data) return;
+	// 精灵#0的数据
+	uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
+	memset(unaligned_buffer + SFC_WIDTH, 0, 16);
+
+	const uint8_t  xxxxx = ppu_.sprites[3];
+	const uint8_t hittest = sfc_pack_bool8_into_byte(unaligned_buffer + xxxxx);
+	if (hittest_data & hittest)
+		ppu_.status |= (uint8_t)SFC_PPU2002_Sp0Hit;
+
+}
+
+void sfc_famicom_t::sfc_sprite0_hittest(uint8_t buffer[SFC_WIDTH]) {
+	//先清空
+	memset(buffer, 0, SFC_WIDTH);
+	//关闭渲染
+	enum { BOTH_BS = SFC_PPU2001_Back | SFC_PPU2001_Sprite };
+	if ((ppu_.mask& (uint8_t)BOTH_BS) != (uint8_t)BOTH_BS)return;
+	//获取数据以填充
+	const uint8_t yyyyy = ppu_.sprites[0];
+	//0xef以上就算了
+	if (yyyyy >= 0xef) return;
+	const auto iiiii = ppu_.sprites[1];
+	const auto sp8x16 = ppu_.ctrl&SFC_PPU2000_Sp8x16;
+	const auto* const spp = ppu_.banks[sp8x16 ?
+		//偶数用0000 奇数1000
+		(iiiii & 1 ? 4 : 0)
+		:
+		//检查SFC_PPU2000_SpTabl
+		(ppu_.ctrl&SFC_PPU2000_SpTabl ? 4 : 0)];
+	//attributes
+	const auto aaaaa = ppu_.sprites[2];
+	//获取平面数据
+	const auto* const nowp0 = spp + iiiii * 16;
+	const auto* const nowp1 = nowp0 + 8;
+	auto *const buffer_write = buffer + yyyyy + 1;
+	//8x16的情况
+	const auto count = sp8x16 ? 16 : 8;
+
+	//水平翻转
+	if (aaaaa&(uint8_t)SFC_SPATTR_FlipH) {
+		for (int i = 0; i != count; ++i) {
+			const auto data = nowp0[i] | nowp1[i];
+			buffer_write[i] = BitReverseTable256[data];
+		}
+	}
+	//普通
+	else {
+		for (int i = 0; i != count; ++i) {
+			const auto data = nowp0[i] | nowp1[i];
+			buffer_write[i] = data;
+		}
+	}
+
+	//垂直翻转
+	if (aaaaa &(uint8_t)SFC_SPATTR_FlipV) {
+		// 8x16
+		if (sp8x16) {
+			sfc_swap_byte(buffer_write + 0, buffer_write + 0xF);
+			sfc_swap_byte(buffer_write + 1, buffer_write + 0xE);
+			sfc_swap_byte(buffer_write + 2, buffer_write + 0xD);
+			sfc_swap_byte(buffer_write + 3, buffer_write + 0xC);
+			sfc_swap_byte(buffer_write + 4, buffer_write + 0xB);
+			sfc_swap_byte(buffer_write + 5, buffer_write + 0xA);
+			sfc_swap_byte(buffer_write + 6, buffer_write + 0x9);
+			sfc_swap_byte(buffer_write + 7, buffer_write + 0x8);
+		}
+		else {
+			sfc_swap_byte(buffer_write + 0, buffer_write + 7);
+			sfc_swap_byte(buffer_write + 1, buffer_write + 6);
+			sfc_swap_byte(buffer_write + 2, buffer_write + 5);
+			sfc_swap_byte(buffer_write + 3, buffer_write + 4);
+		}
+	}
 }
