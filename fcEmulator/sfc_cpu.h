@@ -191,6 +191,9 @@ public:
 	uint16_t            button_index_mask;
 	// 手柄按钮状态
 	uint8_t             button_states[16];
+
+	//cpu 周期计数
+	uint32_t cpu_cycle_count;
 	//====================================
 	void sfc_cpu_execute_one();
 
@@ -202,8 +205,7 @@ private:
 
 
 	//========================================
-	//cpu 周期计数
-	uint32_t cpu_cycle_count;
+
 	// ---------------------------------- 寻址
 	/// <summary>
 	/// 寻址方式: 未知
