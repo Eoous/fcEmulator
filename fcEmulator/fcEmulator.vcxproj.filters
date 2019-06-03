@@ -42,6 +42,9 @@
     <ClInclude Include="sfc_config.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="sfc_render_ez.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -63,6 +66,9 @@
       <Filter>cpp</Filter>
     </ClCompile>
     <ClCompile Include="sfc_config.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="sfc_render_ez.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
