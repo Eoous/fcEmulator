@@ -221,7 +221,7 @@ SFC_EXTERN_C int sub_render(void* rgba) SFC_NOEXCEPT {
 	//精灵图样地址
 	//4是从$1000开始
 	//0是从$0000开始
-	const uint8_t* spp = p->ppu_.banks[p->ppu_.ctrl & SFC_PPUFLAG_SpTabl ? 4 : 0];
+	const uint8_t* spp = p->ppu_.banks[p->ppu_.ctrl & SFC_PPU2000_SpTabl ? 4 : 0];
 	
 
 	for (int i = 63; i != -1; --i) {
