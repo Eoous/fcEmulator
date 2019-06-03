@@ -25,7 +25,14 @@ uint8_t sfc_ppu_t::sfc_read_ppu_address(uint16_t address) {
 		return data;
 	}
 	else {
-		return pseudo = spindexes[real_address*(uint16_t)0x1f];
+		//更新处于调色板“下方”的伪缓存值
+		const uint16_t underneath = real_address - 0x1000;
+		const uint16_t index = real_address >> 10;
+		const uint16_t offset = real_address&(uint16_t)0x3ff;
+		assert(banks[index]);
+		pseudo = banks[index][offset];;
+		//读取调色板能返回即时值
+		return spindexes[real_address&(uint16_t)0x1f];
 	}
 }
 
@@ -71,7 +78,10 @@ uint8_t sfc_ppu_t::sfc_read_ppu_register_via_cpu(uint16_t address) {
 		// 0x2002: Status ($2002) < read
 		// 只读状态寄存器
 		data = status;
+		//读取后会清楚VBlank状态
 		status &= ~(uint8_t)SFC_PPU2002_VBlank;
+		// wiki.nesdev.com/w/index.php/PPU_scrolling:  $2002 read
+		writex2 = 0;
 		break;
 	case 3:
 		// 0x2003: OAM address port ($2003) > write
@@ -81,7 +91,9 @@ uint8_t sfc_ppu_t::sfc_read_ppu_register_via_cpu(uint16_t address) {
 	case 4:
 		// 0x2004: OAM data ($2004) <> read/write
 		// 读写寄存器
-		data = sprites[oamaddr++];
+		// - [???] Address should not increment on $2004 read 
+		//data = sprites[oamaddr++];
+		data = sprites[oamaddr];
 		break;
 	case 5:
 		// 0x2005: Scroll ($2005) >> write x2
@@ -107,6 +119,7 @@ void sfc_ppu_t::sfc_write_ppu_register_via_cpu(uint16_t address, uint8_t data) {
 		// PPU 控制寄存器
 		// 0x2000: Controller ($2000) > write
 		ctrl = data;
+		nametable_select = data & 3;
 		break;
 	case 1:
 		// PPU 掩码寄存器
@@ -140,7 +153,16 @@ void sfc_ppu_t::sfc_write_ppu_register_via_cpu(uint16_t address, uint8_t data) {
 		// 调试显示以下正确
 		// 写入低字节
 		if (writex2 & 1) {
-			vramaddr = (vramaddr & (uint16_t)0xFF00) | (uint16_t)data;
+			const uint16_t tmp = (vramaddr&(uint16_t)0xff00) | (uint16_t)data;
+			vramaddr = tmp;
+			//A - B bit
+			nametable_select = (tmp >> 10) & 3;
+			//0 - 4 bit
+			scroll[0] = (scroll[0] & (uint8_t)7) | ((uint8_t)tmp & (uint8_t)0x1f) << 3;
+			//5 - 9 bit
+			scroll[1] = ((tmp&(uint16_t)0x3e0) >> 2) | (tmp&(uint16_t)data << 8);
+			++writex2;
+			break;
 		}
 		// 写入高字节
 		else {
