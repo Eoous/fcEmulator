@@ -58,7 +58,7 @@ void sfc_famicom_t::sfc_famicom_uninit() {
 
 sfc_ecode sfc_famicom_t::sfc_load_default_rom() {
 	assert(rom_info.data_prgrom == nullptr && "FREE FIRST");
-	FILE *const file = fopen("color_test.nes", "rb");
+	FILE *const file = fopen("mario.nes", "rb");
 
 	if (!file) {
 		return SFC_ERROR_FILE_NOT_FOUNT;
@@ -469,3 +469,338 @@ void sfc_famicom_t::sfc_sprite0_hittest(uint8_t buffer[SFC_WIDTH]) {
 		}
 	}
 }
+
+// the sprites overflow test
+uint16_t sfc_famicom_t::sfc_sprite_overflow_test(){
+	//完全关闭渲染
+	enum{BOTH_BS = SFC_PPU2001_Back|SFC_PPU2001_Sprite};
+	if (!(ppu_.mask&(uint8_t)BOTH_BS))return SFC_HEIGHT;
+	//正式处理
+	uint8_t buffer[256 + 16];
+	memset(buffer, 0, 256);
+	// 8 x 16
+	const int height = ppu_.ctrl&SFC_PPU2000_Sp8x16 ? 16 : 8;
+	for (int i = 0; i != SFC_SPRITE_COUNT; ++i) {
+		const uint8_t y = ppu_.sprites[i * 4];
+		for (int i = 0; i != height; ++i) {
+			buffer[y + i]++;
+		}
+	}
+	//搜索第一个超过8的
+	uint16_t line;
+	for (line = 0; line != SFC_HEIGHT; ++line) {
+		if (buffer[line] > 8)break;
+	}
+
+	return line;
+}
+
+void sfc_famicom_t::sfc_sprite_expand_8_on(uint8_t p0, uint8_t p1, uint8_t high, uint8_t * output){
+	// 0 - D7
+	const uint8_t low0 = ((p0 & (uint8_t)0x80) >> 6) | ((p1 & (uint8_t)0x80) >> 5);
+	if (low0) output[0] = high | low0;
+	// 1 - D6
+	const uint8_t low1 = ((p0 & (uint8_t)0x40) >> 5) | ((p1 & (uint8_t)0x40) >> 4);
+	if (low1) output[1] = high | low1;
+	// 2 - D5
+	const uint8_t low2 = ((p0 & (uint8_t)0x20) >> 4) | ((p1 & (uint8_t)0x20) >> 3);
+	if (low2) output[2] = high | low2;
+	// 3 - D4
+	const uint8_t low3 = ((p0 & (uint8_t)0x10) >> 3) | ((p1 & (uint8_t)0x10) >> 2);
+	if (low3) output[3] = high | low3;
+	// 4 - D3
+	const uint8_t low4 = ((p0 & (uint8_t)0x08) >> 2) | ((p1 & (uint8_t)0x08) >> 1);
+	if (low4) output[4] = high | low4;
+	// 5 - D2
+	const uint8_t low5 = ((p0 & (uint8_t)0x04) >> 1) | ((p1 & (uint8_t)0x04) >> 0);
+	if (low5) output[5] = high | low5;
+	// 6 - D1
+	const uint8_t low6 = ((p0 & (uint8_t)0x02) >> 0) | ((p1 & (uint8_t)0x02) << 1);
+	if (low6) output[6] = high | low6;
+	// 7 - D0
+	const uint8_t low7 = ((p0 & (uint8_t)0x01) << 1) | ((p1 & (uint8_t)0x01) << 2);
+	if (low7) output[7] = high | low7;
+}
+
+void sfc_famicom_t::sfc_sprite_expand_8_op(uint8_t p0, uint8_t p1, uint8_t high, uint8_t * output){
+	// 0 - D7
+	const uint8_t low0 = ((p0 & (uint8_t)0x80) >> 6) | ((p1 & (uint8_t)0x80) >> 5);
+	if (~output[0] & 1) output[0] = high | low0;
+	// 1 - D6
+	const uint8_t low1 = ((p0 & (uint8_t)0x40) >> 5) | ((p1 & (uint8_t)0x40) >> 4);
+	if (~output[1] & 1) output[1] = high | low1;
+	// 2 - D5
+	const uint8_t low2 = ((p0 & (uint8_t)0x20) >> 4) | ((p1 & (uint8_t)0x20) >> 3);
+	if (~output[2] & 1) output[2] = high | low2;
+	// 3 - D4
+	const uint8_t low3 = ((p0 & (uint8_t)0x10) >> 3) | ((p1 & (uint8_t)0x10) >> 2);
+	if (~output[3] & 1) output[3] = high | low3;
+	// 4 - D3
+	const uint8_t low4 = ((p0 & (uint8_t)0x08) >> 2) | ((p1 & (uint8_t)0x08) >> 1);
+	if (~output[4] & 1) output[4] = high | low4;
+	// 5 - D2
+	const uint8_t low5 = ((p0 & (uint8_t)0x04) >> 1) | ((p1 & (uint8_t)0x04) >> 0);
+	if (~output[5] & 1) output[5] = high | low5;
+	// 6 - D1
+	const uint8_t low6 = ((p0 & (uint8_t)0x02) >> 0) | ((p1 & (uint8_t)0x02) << 1);
+	if (~output[6] & 1) output[6] = high | low6;
+	// 7 - D0
+	const uint8_t low7 = ((p0 & (uint8_t)0x01) << 1) | ((p1 & (uint8_t)0x01) << 2);
+	if (~output[7] & 1) output[7] = high | low7;
+}
+
+void sfc_famicom_t::sfc_sprite_expand_8_rn(uint8_t p0, uint8_t p1, uint8_t high, uint8_t * output){
+	// 7 - D7
+	const uint8_t low0 = ((p0 & (uint8_t)0x80) >> 6) | ((p1 & (uint8_t)0x80) >> 5);
+	if (low0) output[7] = high | low0;
+	// 6 - D6
+	const uint8_t low1 = ((p0 & (uint8_t)0x40) >> 5) | ((p1 & (uint8_t)0x40) >> 4);
+	if (low1) output[6] = high | low1;
+	// 5 - D5
+	const uint8_t low2 = ((p0 & (uint8_t)0x20) >> 4) | ((p1 & (uint8_t)0x20) >> 3);
+	if (low2) output[5] = high | low2;
+	// 4 - D4
+	const uint8_t low3 = ((p0 & (uint8_t)0x10) >> 3) | ((p1 & (uint8_t)0x10) >> 2);
+	if (low3) output[4] = high | low3;
+	// 3 - D3
+	const uint8_t low4 = ((p0 & (uint8_t)0x08) >> 2) | ((p1 & (uint8_t)0x08) >> 1);
+	if (low4) output[3] = high | low4;
+	// 2 - D2
+	const uint8_t low5 = ((p0 & (uint8_t)0x04) >> 1) | ((p1 & (uint8_t)0x04) >> 0);
+	if (low5) output[2] = high | low5;
+	// 1 - D1
+	const uint8_t low6 = ((p0 & (uint8_t)0x02) >> 0) | ((p1 & (uint8_t)0x02) << 1);
+	if (low6) output[1] = high | low6;
+	// 0 - D0
+	const uint8_t low7 = ((p0 & (uint8_t)0x01) << 1) | ((p1 & (uint8_t)0x01) << 2);
+	if (low7) output[0] = high | low7;
+}
+
+void sfc_famicom_t::sfc_sprite_expand_8_rp(uint8_t p0, uint8_t p1, uint8_t high, uint8_t * output){
+		// 7 - D7
+		const uint8_t low0 = ((p0 & (uint8_t)0x80) >> 6) | ((p1 & (uint8_t)0x80) >> 5);
+		if (~output[7] & 1) output[7] = high | low0;
+		// 6 - D6
+		const uint8_t low1 = ((p0 & (uint8_t)0x40) >> 5) | ((p1 & (uint8_t)0x40) >> 4);
+		if (~output[6] & 1) output[6] = high | low1;
+		// 5 - D5
+		const uint8_t low2 = ((p0 & (uint8_t)0x20) >> 4) | ((p1 & (uint8_t)0x20) >> 3);
+		if (~output[5] & 1) output[5] = high | low2;
+		// 4 - D4
+		const uint8_t low3 = ((p0 & (uint8_t)0x10) >> 3) | ((p1 & (uint8_t)0x10) >> 2);
+		if (~output[4] & 1) output[4] = high | low3;
+		// 3 - D3
+		const uint8_t low4 = ((p0 & (uint8_t)0x08) >> 2) | ((p1 & (uint8_t)0x08) >> 1);
+		if (~output[3] & 1) output[3] = high | low4;
+		// 2 - D2
+		const uint8_t low5 = ((p0 & (uint8_t)0x04) >> 1) | ((p1 & (uint8_t)0x04) >> 0);
+		if (~output[2] & 1) output[2] = high | low5;
+		// 1 - D1
+		const uint8_t low6 = ((p0 & (uint8_t)0x02) >> 0) | ((p1 & (uint8_t)0x02) << 1);
+		if (~output[1] & 1) output[1] = high | low6;
+		// 0 - D0
+		const uint8_t low7 = ((p0 & (uint8_t)0x01) << 1) | ((p1 & (uint8_t)0x01) << 2);
+		if (~output[0] & 1) output[0] = high | low7;
+}
+
+void sfc_famicom_t::sfc_render_sprites(uint8_t * buffer){
+	//8x16
+	const uint8_t sp8x16 = (ppu_.ctrl&(uint8_t)SFC_PPU2000_Sp8x16) >> 2;
+	//精灵用图样
+	const uint8_t* sppbuffer[2];
+	sppbuffer[0]=ppu_.banks[
+		(sp8x16) ? 0 : (ppu_.ctrl&SFC_PPU2000_SpTabl ? 4 : 0)];
+	sppbuffer[1] = sp8x16 ? ppu_.banks[4] : sppbuffer[0] + 16;
+	
+	//遍历所有精灵
+	for (int index = 0; index != SFC_SPRITE_COUNT; ++index) {
+		const auto* const base = ppu_.sprites + (SFC_SPRITE_COUNT - 1 - index) * 4;
+		const auto yyyy = base[0];
+		if (yyyy >= (uint8_t)0xef) {
+			continue;
+		}
+		const auto iiii = base[1];
+		const auto aaaa = base[2];
+		const auto xxxx = base[3];
+		const auto high = ((aaaa & 3) | 4) << 3;
+
+		const auto* const nowp0 = sppbuffer[iiii & 1] + (iiii&(uint8_t)0xfe) * 16;
+		const auto* const nowp1 = nowp0 + 8;
+		auto* const write = buffer + xxxx + (yyyy + 1)*SFC_WIDTH;
+
+		//hVHP
+		switch (((uint8_t)(aaaa >> 5) | sp8x16)&(uint8_t)0x0f) {
+		case 0x8:
+			//1000 : 8x16前
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_on(nowp0[j + 16], nowp1[j + 16], high, write + SFC_WIDTH * (j + 8));
+			sfc_fallthrough;
+		case 0x0:
+			// 0000: 前
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_on(nowp0[j], nowp1[j], high, write + SFC_WIDTH * j);
+			break;
+		case 0x9:
+			// 1001: 8x16 后
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_op(nowp0[j + 16], nowp1[j + 16], high, write + SFC_WIDTH * (j + 8));
+			sfc_fallthrough;
+		case 0x1:
+			// 0001: 后
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_op(nowp0[j], nowp1[j], high, write + SFC_WIDTH * j);
+			break;
+		case 0xA:
+			// 1010: 8x16 水平翻转 前 
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_rn(nowp0[j + 16], nowp1[j + 16], high, write + SFC_WIDTH * (j + 8));
+			sfc_fallthrough;
+		case 0x2:
+			// 0010: 水平翻转 前 
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_rn(nowp0[j], nowp1[j], high, write + SFC_WIDTH * j);
+			break;
+		case 0xB:
+			// 1011: 8x16 水平翻转 后
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_rp(nowp0[j + 16], nowp1[j + 16], high, write + SFC_WIDTH * (j + 8));
+			sfc_fallthrough;
+		case 0x3:
+			// 0011: 水平翻转 后
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_rp(nowp0[j], nowp1[j], high, write + SFC_WIDTH * j);
+			break;
+		case 0xC:
+			// 1100: 8x16 垂直翻转 前
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_on(nowp0[j + 16], nowp1[j + 16], high, write + SFC_WIDTH * (7 - j));
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_on(nowp0[j], nowp1[j], high, write + SFC_WIDTH * (15 - j));
+			break;
+		case 0x4:
+			// 0100: 垂直翻转 前 
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_on(nowp0[j], nowp1[j], high, write + SFC_WIDTH * (7 - j));
+			break;
+		case 0xD:
+			// 1101: 8x16 垂直翻转 后
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_op(nowp0[j + 16], nowp1[j + 16], high, write + SFC_WIDTH * (7 - j));
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_op(nowp0[j], nowp1[j], high, write + SFC_WIDTH * (15 - j));
+			break;
+		case 0x5:
+			// 0101: 垂直翻转 后
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_op(nowp0[j], nowp1[j], high, write + SFC_WIDTH * (7 - j));
+			break;
+		case 0xE:
+			// 1110: 8x16 垂直翻转 水平翻转 前 
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_rn(nowp0[j + 16], nowp1[j + 16], high, write + SFC_WIDTH * (7 - j));
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_rn(nowp0[j], nowp1[j], high, write + SFC_WIDTH * (15 - j));
+			break;
+		case 0x6:
+			// 0110: 8x16 垂直翻转 水平翻转 前 
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_rn(nowp0[j], nowp1[j], high, write + SFC_WIDTH * (7 - j));
+			break;
+		case 0xF:
+			// 1111: 8x16 垂直翻转 水平翻转 后
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_rp(nowp0[j + 16], nowp1[j + 16], high, write + SFC_WIDTH * (7 - j));
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_rp(nowp0[j], nowp1[j], high, write + SFC_WIDTH * (15 - j));
+			break;
+		case 0x7:
+			// 0111: 垂直翻转 水平翻转 后
+			for (int j = 0; j != 8; ++j)
+				sfc_sprite_expand_8_rp(nowp0[j], nowp1[j], high, write + SFC_WIDTH * (7 - j));
+			break;
+		}
+	}
+}
+
+void sfc_famicom_t::sfc_render_frame_easy(uint8_t * buffer){
+	enum{SCAN_LINE_COUNT=SFC_HEIGHT};
+	auto* const data = buffer;
+	const auto vblank_line = config_.get_vb_s();
+	const uint32_t per_scanline = config_.get_m_cps();
+	uint32_t end_cycle_count = 0;
+
+	//精灵0用命中测试缓存
+	uint8_t sp0_hittest_buffer[SFC_WIDTH];
+	sfc_sprite0_hittest(sp0_hittest_buffer);
+	//精灵溢出测试
+	const auto sp_overflow_line = sfc_sprite_overflow_test();
+	//关闭渲染则输出背景色?
+	if (!(ppu_.mask&(uint8_t)SFC_PPU2001_Back)) {
+		memset(buffer, 0, SFC_WIDTH*SFC_HEIGHT);
+	}
+	//渲染
+	for (uint16_t i = 0; i != (uint16_t)SCAN_LINE_COUNT; ++i) {
+		end_cycle_count += per_scanline;
+		const uint32_t end_cycle_count_this_round = end_cycle_count / MASTER_CYCLE_PER_CPU;
+		 auto* const count = &cpu_.cpu_cycle_count;
+		// 渲染背景
+		sfc_render_background_scanline( i, sp0_hittest_buffer, buffer);
+		// 溢出测试
+		if (i == sp_overflow_line)
+			ppu_.status |= (uint8_t)SFC_PPU2002_SpOver;
+		// 执行CPU
+		for (; *count < end_cycle_count_this_round;)
+			cpu_.sfc_cpu_execute_one();
+		buffer += SFC_WIDTH;
+		// 执行HBlank
+	}
+	// 渲染精灵
+	if (ppu_.mask & (uint8_t)SFC_PPU2001_Sprite)
+		sfc_render_sprites( data);
+
+	// 后渲染
+	{
+		end_cycle_count += per_scanline;
+		const uint32_t end_cycle_count_this_round = end_cycle_count / MASTER_CYCLE_PER_CPU;
+		uint32_t* const count = &cpu_.cpu_cycle_count;
+		for (; *count < end_cycle_count_this_round;)
+			cpu_.sfc_cpu_execute_one();
+	}
+	// 垂直空白期间
+
+	// 开始
+	ppu_.status |= (uint8_t)SFC_PPU2002_VBlank;
+	if (ppu_.ctrl & (uint8_t)SFC_PPU2000_NMIGen) {
+		cpu_.sfc_operation_NMI();
+	}
+	// 执行
+	for (uint16_t i = 0; i != vblank_line; ++i) {
+		end_cycle_count += per_scanline;
+		const uint32_t end_cycle_count_this_round = end_cycle_count / MASTER_CYCLE_PER_CPU;
+		uint32_t* const count = &cpu_.cpu_cycle_count;
+		for (; *count < end_cycle_count_this_round;)
+			cpu_.sfc_cpu_execute_one();
+	}
+	// 结束
+	ppu_.status = 0;
+	// 垂直滚动仅对下帧有效
+	ppu_.now_scrolly = ppu_.scroll[1];
+
+	// 预渲染
+	end_cycle_count += per_scanline * 2;
+	// 最后一次保证是偶数(DMA使用)
+	const uint32_t end_cycle_count_last_round =
+		(uint32_t)(end_cycle_count / MASTER_CYCLE_PER_CPU) & ~(uint32_t)1;
+	{
+		uint32_t* const count = &cpu_.cpu_cycle_count;
+		for (; *count < end_cycle_count_last_round;)
+			cpu_.sfc_cpu_execute_one();
+	}
+
+	// 重置计数器(32位整数太短了)
+	cpu_.cpu_cycle_count -= end_cycle_count_last_round;
+}
+
+
+
+
