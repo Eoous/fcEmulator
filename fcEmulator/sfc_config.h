@@ -14,6 +14,12 @@ public:
 	constexpr const uint16_t& get_rr() const {
 		return refresh_rate;
 	}
+	constexpr const uint16_t& get_vb_s() const {
+		return vblank_scanline;
+	}
+	constexpr const uint16_t& get_m_cps() const {
+		return master_cycle_per_scanline;
+	}
 private:
 
 	//=================================
