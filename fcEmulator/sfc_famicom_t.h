@@ -80,6 +80,11 @@ public:
 
 	//载入1kCHR ROM
 	void sfc_load_chrrom_1k(int des, int src);
+	//==================================================
+	//使用简易模式渲染一帧，效率较高
+	//D0 - 0为全局背景色 1为非全局背景色，是背景D1和D2"与"操作的结果
+	//D1 - D5 调色板索引
+	void sfc_render_frame_easy(uint8_t* buffer);
 private:
 	// 成员变量
 	void *argument;
@@ -108,4 +113,12 @@ private:
 	void sfc_sprite0_hittest(uint8_t buffer[SFC_WIDTH]);
 	//the sprite overflow test.
 	uint16_t sfc_sprite_overflow_test();
+	//the sprite expand 8.
+	void sfc_sprite_expand_8_on(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
+	void sfc_sprite_expand_8_op(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
+	void sfc_sprite_expand_8_rn(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
+	void sfc_sprite_expand_8_rp(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
+	//the render sprites
+	void sfc_render_sprites(uint8_t* buffer);
+
 };
