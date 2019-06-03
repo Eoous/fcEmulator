@@ -5,17 +5,15 @@ constexpr int MASTER_CYCLE_PER_CPU = 12;
 class sfc_config_t
 {
 public:
-	sfc_config_t() = default;
-	constexpr sfc_config_t(float cc, uint16_t rr, uint16_t scanline, uint16_t drawline,
-		uint16_t hblank, uint16_t vi_scanline, uint16_t vb_scanline) : cpu_clock(cc), refresh_rate(rr), master_cycle_per_scanline(scanline),
+	constexpr sfc_config_t(float cc=0.f, uint16_t rr=0, uint16_t scanline=0, uint16_t drawline=0,
+		uint16_t hblank=0, uint16_t vi_scanline=0, uint16_t vb_scanline=0) : cpu_clock(cc), refresh_rate(rr), master_cycle_per_scanline(scanline),
 		master_cycle_per_drawline(drawline), master_cycle_per_hblank(hblank), visible_scanline(vi_scanline), vblank_scanline(vb_scanline)
 	{
 
 	}
-	constexpr sfc_config_t operator=(const sfc_config_t& con) {
-		return con;
+	constexpr const uint16_t& get_rr() const {
+		return refresh_rate;
 	}
-	~sfc_config_t() = default;
 private:
 
 	//=================================
