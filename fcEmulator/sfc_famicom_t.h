@@ -1,13 +1,17 @@
 #pragma once
 #include <memory>
+#include <assert.h>
+#include <string>
+#include <algorithm>
+
+//======================
 #include "sfc_rom.h"
 #include "sfc_code.h"
 #include "sfc_cpu.h"
 #include "sfc_ppu_t.h"
 #include "sfc_config.h"
-#include <assert.h>
-#include <string>
-#include <algorithm>
+#include "sfc_render_ez.h"
+//======================
 enum sfc_button_index {
 	SFC_BUTTON_A = 0,
 	SFC_BUTTON_B,
@@ -24,8 +28,6 @@ enum sfc_constant {
 	SFC_HEIGHT = 240,
 	SFC_SPRITE_COUNT = 64,
 };
-
-
 
 class sfc_famicom_t
 {
@@ -100,6 +102,10 @@ private:
 	// 初始化和去初始化
 	sfc_ecode sfc_famicom_init();
 	void sfc_famicom_uninit();
-
-
+	//render background scanline
+	void sfc_render_background_scanline(uint16_t line, const uint8_t sp0[SFC_HEIGHT + (16)], uint8_t* buffer);
+	//the sprite0 hittest.
+	void sfc_sprite0_hittest(uint8_t buffer[SFC_WIDTH]);
+	//the sprite overflow test.
+	uint16_t sfc_sprite_overflow_test();
 };
