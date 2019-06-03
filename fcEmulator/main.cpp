@@ -129,28 +129,52 @@ void expand_line_8_r(uint8_t p0, uint8_t p1, uint8_t high, uint32_t* output) {
 void main_render(void* rgba,sfc_famicom_t& famicom)noexcept {
 	uint32_t* data = (uint32_t*)rgba;
 
-	for (int i = 0; i != 10000; ++i)
-	{
-		//famicom.sfc_before_execute();
-		famicom.cpu_.sfc_cpu_execute_one();
-	}
-	famicom.sfc_do_vblank();
+	//for (int i = 0; i != 10000; ++i)
+	//{
+	//	//famicom.sfc_before_execute();
+	//	famicom.cpu_.sfc_cpu_execute_one();
+	//}
+	//famicom.sfc_do_vblank();
 
-	// 生成调色板颜色
-	{
-		for (int i = 0; i != 16; ++i) {
-			palette_data[i] =sfc_stdpalette[famicom.ppu_.spindexes[i]].data;
-		}
-		palette_data[4 * 1] = palette_data[0];
-		palette_data[4 * 2] = palette_data[0];
-		palette_data[4 * 3] = palette_data[0];
+	//// 生成调色板颜色
+	//{
+	//	for (int i = 0; i != 16; ++i) {
+	//		palette_data[i] =sfc_stdpalette[famicom.ppu_.spindexes[i]].data;
+	//	}
+	//	palette_data[4 * 1] = palette_data[0];
+	//	palette_data[4 * 2] = palette_data[0];
+	//	palette_data[4 * 3] = palette_data[0];
+	//}
+	//// 背景
+	//const uint8_t* now = famicom.ppu_.banks[8];
+	//const uint8_t* bgp = famicom.ppu_.banks[
+	//	(famicom.ppu_.ctrl & SFC_PPU2000_BgTabl ? 4 : 0)];
+	//for (unsigned i = 0; i != 256 * 240; ++i) {
+	//	data[i] = get_pixel(i & 0xff, i >> 8, now, bgp);
+	//}
+	//==========================================================
+	//step7
+	uint8_t buffer[256 * 256];
+	p->sfc_render_frame_easy(buffer);
+	//p->sfc_render_frame(buffer);
+
+	//生成调色板数据
+	uint32_t palette[32];
+
+	for (int i = 0; i != 32; ++i) {
+		palette[i] = sfc_stdpalette[p->ppu_.spindexes[i]].data;
 	}
-	// 背景
-	const uint8_t* now = famicom.ppu_.banks[8];
-	const uint8_t* bgp = famicom.ppu_.banks[
-		(famicom.ppu_.ctrl & SFC_PPU2000_BgTabl ? 4 : 0)];
-	for (unsigned i = 0; i != 256 * 240; ++i) {
-		data[i] = get_pixel(i & 0xff, i >> 8, now, bgp);
+	//镜像数据
+	palette[4 * 1] = palette[0];
+	palette[4 * 2] = palette[0];
+	palette[4 * 3] = palette[0];
+	palette[4 * 4] = palette[0];
+	palette[4 * 5] = palette[0];
+	palette[4 * 6] = palette[0];
+	palette[4 * 7] = palette[0];
+
+	for (int i = 0; i != 256 * 240; ++i) {
+		data[i] = palette[buffer[i] >> 1];
 	}
 }
 
@@ -204,6 +228,7 @@ SFC_EXTERN_C void user_input(int index, unsigned char data) SFC_NOEXCEPT {
 }
 //=====================================================
 SFC_EXTERN_C int sub_render(void* rgba) SFC_NOEXCEPT {
+	return 0;
 	auto data = (uint32_t*)rgba;
 	//生成调色板颜色
 	{
