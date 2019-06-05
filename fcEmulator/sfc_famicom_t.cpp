@@ -279,7 +279,7 @@ void sfc_famicom_t::sfc_before_execute() {
 	sfc_fc_disassembly(pc, buf);
 	printf(
 		"%4d - %s   A:%02X X:%02X Y:%02X P:%02X SP:%02X\n",
-		line, buf,
+		cpu_.cpu_cycle_count, buf,
 		(int)cpu_.registers_.get_accumulator(),
 		(int)cpu_.registers_.get_x_index(),
 		(int)cpu_.registers_.get_y_index(),
@@ -345,7 +345,7 @@ void sfc_famicom_t::sfc_render_background_scanline(uint16_t line, const uint8_t 
 	const uint16_t scrollx = (uint16_t)ppu_.scroll[0] + (uint16_t)((ppu_.nametable_select & 1) << 8);
 	const uint16_t scrolly = line + (uint16_t)ppu_.now_scrolly + (uint16_t)((ppu_.nametable_select & 2) ? 240 : 0);
 
-	//由于Y是240一换，需要膜计算
+	//由于Y是240一换，需要模计算
 	const uint16_t scrolly_index0 = scrolly / (uint16_t)240;
 	const uint16_t scrolly_offset = scrolly % (uint16_t)240;
 
@@ -730,29 +730,52 @@ void sfc_famicom_t::sfc_render_frame_easy(uint8_t * buffer){
 	uint32_t end_cycle_count = 0;
 
 	//精灵0用命中测试缓存
+	//sprite zero hits
+	/*
+	貌似这个只是用来告诉cpu ppu绘制的图片已经进行到的位置
+	The PPU detects this condition and sets bit 6 of PPUSTATUS ($2002) to 1 starting at this pixel, letting the CPU know how far along the PPU is in drawing the picture.
+	https://wiki.nesdev.com/w/index.php?title=PPU_OAM&redirect=no#Sprite_zero_hits
+	The PPU sets bit 6 of PPUSTATUS if an opaque pixel of the sprite at OAM index 0 intersects an opaque background pixel. 
+	It sets this flag as soon as it draws the intersecting pixel, so by putting sprite 0 at a clever location, a game can detect when the PPU has drawn a part of the picture.
+	https://retrocomputing.stackexchange.com/questions/1898/how-can-i-create-a-split-scroll-effect-in-an-nes-game
+	*/
 	uint8_t sp0_hittest_buffer[SFC_WIDTH];
 	sfc_sprite0_hittest(sp0_hittest_buffer);
 	//精灵溢出测试
+	//返回的时候溢出的行(貌似)
 	const auto sp_overflow_line = sfc_sprite_overflow_test();
 	//关闭渲染则输出背景色?
 	if (!(ppu_.mask&(uint8_t)SFC_PPU2001_Back)) {
 		memset(buffer, 0, SFC_WIDTH*SFC_HEIGHT);
 	}
-	//渲染
-	for (uint16_t i = 0; i != (uint16_t)SCAN_LINE_COUNT; ++i) {
-		end_cycle_count += per_scanline;
-		const uint32_t end_cycle_count_this_round = end_cycle_count / MASTER_CYCLE_PER_CPU;
-		 auto* const count = &cpu_.cpu_cycle_count;
-		// 渲染背景
-		sfc_render_background_scanline( i, sp0_hittest_buffer, buffer);
-		// 溢出测试
-		if (i == sp_overflow_line)
-			ppu_.status |= (uint8_t)SFC_PPU2002_SpOver;
-		// 执行CPU
-		for (; *count < end_cycle_count_this_round;)
-			cpu_.sfc_cpu_execute_one();
-		buffer += SFC_WIDTH;
-		// 执行HBlank
+	//渲染 以扫描线为单位
+	//SCAN_LINE_COUNT=240,一共240条扫描线
+	{
+		for (uint16_t i = 0; i != (uint16_t)SCAN_LINE_COUNT; ++i) {
+			end_cycle_count += per_scanline;
+
+			//end_cycle_count_this_round
+			//同步cycle_count 如果cycle_count超过end_this_round则不再执行
+			//即每条扫描线最多执行113个cpu周期
+			//对应下面的 - 执行CPU部分 -
+			const uint32_t end_cycle_count_this_round = end_cycle_count / MASTER_CYCLE_PER_CPU;
+			auto* const count = &cpu_.cpu_cycle_count;
+			// 渲染背景
+			sfc_render_background_scanline(i, sp0_hittest_buffer, buffer);
+			// 溢出测试
+			if (i == sp_overflow_line)
+				ppu_.status |= (uint8_t)SFC_PPU2002_SpOver;
+			// 执行CPU
+			for (; *count < end_cycle_count_this_round;) {
+				//sfc_before_execute();
+				cpu_.sfc_cpu_execute_one();
+			}
+			//printf("%d,%d,%d - 1", end_cycle_count, per_scanline, end_cycle_count_this_round);
+
+
+			buffer += SFC_WIDTH;
+			// 执行HBlank
+		}
 	}
 	// 渲染精灵
 	if (ppu_.mask & (uint8_t)SFC_PPU2001_Sprite)
@@ -763,8 +786,11 @@ void sfc_famicom_t::sfc_render_frame_easy(uint8_t * buffer){
 		end_cycle_count += per_scanline;
 		const uint32_t end_cycle_count_this_round = end_cycle_count / MASTER_CYCLE_PER_CPU;
 		uint32_t* const count = &cpu_.cpu_cycle_count;
-		for (; *count < end_cycle_count_this_round;)
+		for (; *count < end_cycle_count_this_round;) {
+			//sfc_before_execute();
 			cpu_.sfc_cpu_execute_one();
+		}
+		//printf("%d,%d,%d - 2", end_cycle_count, per_scanline, end_cycle_count_this_round);
 	}
 	// 垂直空白期间
 
@@ -778,8 +804,11 @@ void sfc_famicom_t::sfc_render_frame_easy(uint8_t * buffer){
 		end_cycle_count += per_scanline;
 		const uint32_t end_cycle_count_this_round = end_cycle_count / MASTER_CYCLE_PER_CPU;
 		uint32_t* const count = &cpu_.cpu_cycle_count;
-		for (; *count < end_cycle_count_this_round;)
+		for (; *count < end_cycle_count_this_round;) {
+			//sfc_before_execute();
 			cpu_.sfc_cpu_execute_one();
+		}
+		//printf("%d,%d,%d - 3", end_cycle_count, per_scanline, end_cycle_count_this_round);
 	}
 	// 结束
 	ppu_.status = 0;
@@ -793,8 +822,11 @@ void sfc_famicom_t::sfc_render_frame_easy(uint8_t * buffer){
 		(uint32_t)(end_cycle_count / MASTER_CYCLE_PER_CPU) & ~(uint32_t)1;
 	{
 		uint32_t* const count = &cpu_.cpu_cycle_count;
-		for (; *count < end_cycle_count_last_round;)
+		for (; *count < end_cycle_count_last_round;) {
+			//sfc_before_execute();
 			cpu_.sfc_cpu_execute_one();
+		}
+		//printf("%d,%d,%d - 4", end_cycle_count, per_scanline);
 	}
 
 	// 重置计数器(32位整数太短了)
