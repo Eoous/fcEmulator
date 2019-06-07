@@ -5,12 +5,13 @@
 #include <emmintrin.h>
 //======================
 #define sfc_fallthrough
-// 微软编译器目前不支持C11的关键字_Alignas
-#ifdef _MSC_VER
-#define SFC_ALIGNAS(a) __declspec(align(a))
-#else
-#define SFC_ALIGNAS(a) _Alignas(a)
-#endif
+//原来有这个 因为用c++ 直接使用alignas关键字即可
+//// 微软编译器目前不支持C11的关键字_Alignas
+//#ifdef _MSC_VER
+//#define SFC_ALIGNAS(a) __declspec(align(a))
+//#else
+//#define SFC_ALIGNAS(a) _Alignas(a)
+//#endif
 
 //==================================================================================================
 // The bit reverse table256
@@ -35,7 +36,7 @@ const unsigned char BitReverseTable256[] = {
 
 //使用4bit查找对应的32位整型
 //使用8bit的话会使用256*8=2kb空间，缓存不友好
-SFC_ALIGNAS(32)  const uint32_t sfc_u32_bit_lut[16] = {
+alignas(32)  const uint32_t sfc_u32_bit_lut[16] = {
 	0x00000000, // 0000
 	0x01000000, // 0001
 	0x00010000, // 0010
