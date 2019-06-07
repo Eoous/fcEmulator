@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string>
 #include <algorithm>
+#include <iostream>
 
 //======================
 #include "sfc_rom.h"
