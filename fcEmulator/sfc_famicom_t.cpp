@@ -337,57 +337,102 @@ void sfc_famicom_t::sfc_load_chrrom_1k(int des, int src) {
 
 //=========================================
 //step7
+//line = 当前渲染的扫面线行号
 void sfc_famicom_t::sfc_render_background_scanline(uint16_t line, const uint8_t sp0[SFC_HEIGHT + (16)], uint8_t * buffer) {
 	//取消背景显示
 	if (!(ppu_.mask&(uint8_t)SFC_PPU2001_Back))return;
 
 	//计算当前偏移量
+	//读取滚动偏移量x和y
+	//这个滚动偏移应该是窗口的位置
 	const uint16_t scrollx = (uint16_t)ppu_.scroll[0] + (uint16_t)((ppu_.nametable_select & 1) << 8);
 	const uint16_t scrolly = line + (uint16_t)ppu_.now_scrolly + (uint16_t)((ppu_.nametable_select & 2) ? 240 : 0);
 
 	//由于Y是240一换，需要模计算
+	//index0 = ppu_.nametable_select & 2?
+	//offset
+	//y轴只有240个像素点 多出来的是对应面的镜像，直接算出来偏移量就可以了
+	//offset像是真实的y坐标
 	const uint16_t scrolly_index0 = scrolly / (uint16_t)240;
 	const uint16_t scrolly_offset = scrolly % (uint16_t)240;
 
 	//计算背景所使用的图样表
-	const uint8_t* const pattern = ppu_.banks[ppu_.ctrl&SFC_PPU2000_BgTabl ? 4 : 0];
+	//cpu中$2000 D4位
+	//如果为1，背景从$1000开始。
+	//如果为0，背景从$0000开始
+	const auto* const pattern = ppu_.banks[ppu_.ctrl&SFC_PPU2000_BgTabl ? 4 : 0];
+
 	//检测垂直偏移量确定使用图案表的前一半[8-9]还是后一半[10-11]
+	//8 - 00
+	//9 - 01
+	//10 - 10
+	//11 - 11
 	const uint8_t* table[2];
 
 	const int first_buck = 8 + ((scrolly_index0 & 1) << 1);
 	table[0] = ppu_.banks[first_buck];
 	table[1] = ppu_.banks[first_buck + 1];
-	// 以16像素为单位扫描该行
-	SFC_ALIGNAS(16) uint8_t aligned_buffer[SFC_WIDTH + 16 + 16];
-	{
-		const uint8_t realy = (uint8_t)scrolly_offset;
-		// 保险起见扫描16+1次
-		for (uint16_t i = 0; i != 17; ++i) {
-			const uint16_t realx = scrollx + (i << 4);
-			const uint8_t* nt = table[(realx >> 8) & 1];
-			const uint8_t xunit = (realx & (uint16_t)0xF0) >> 4;
-			// 获取32为单位的调色板索引字节
-			const uint8_t attr = (nt + 32 * 30)[(realy >> 5 << 3) | (xunit >> 1)];
-			// 获取属性表内位偏移
-			const uint8_t aoffset = ((uint8_t)(xunit & 1) << 1) | ((realy & 0x10) >> 2);
-			// 计算高两位
-			const uint8_t high = (attr & (3 << aoffset)) >> aoffset << 3;
-			// 计算图样表位置
-			const uint8_t* too_young = nt + ((uint16_t)xunit << 1) + (uint16_t)(realy >> 3 << 5);
-			const uint8_t too_young0 = too_young[0];
-			const uint8_t too_young1 = too_young[1];
-			// 渲染16个像素
-			sfc_render_background_pixel16(
-				high,
-				pattern + too_young0 * 16 + (realy & 7),
-				pattern + too_young1 * 16 + (realy & 7),
-				aligned_buffer + (i << 4)
-			);
-		}
-		// 将数据复制过去
-		const uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
-		memcpy(buffer, unaligned_buffer, SFC_WIDTH);
+
+	//以16像素为单位扫描该行 每次渲染16像素 == 每次渲染2个tiles
+	//1个tile 在某行有8像素，16像素则为2个tiles
+	//这里去掉了 alignas(16) ，原作者应该是想16像素对齐的，加上不知道有什么意义
+	uint8_t aligned_buffer[SFC_WIDTH + 16 + 16];
+	//std::cout << unsigned(&aligned_buffer) << std::endl;
+	//std::cout << unsigned(&aligned_buffer[16]) << std::endl;
+	//std::cout << unsigned(&aligned_buffer[32]) << std::endl;
+	//std::cout << &aligned_buffer[3] << std::endl;
+
+{
+	const uint8_t realy = (uint8_t)scrolly_offset;
+	// 保险起见扫描16+1次
+	for (uint16_t i = 0; i != 17; ++i) {
+		//realx 当前以16像素为单位渲染的x坐标
+		//realy							y坐标
+		const uint16_t realx = scrollx + (i << 4);
+		//选择名称表
+		//scrollx=1，i=16时候 当前渲染像素则是01页的第一个像素
+		//realx=257   256>>8=1
+		//00页由第一个名称表控制
+		//01页由第二个名称表控制
+		const uint8_t* nt = table[(realx >> 8) & 1];//(realx >> 8) & 1
+		//横向32个tiles 每2个tiles一组，共16组 用坐标高4位来判断是哪一组
+		const uint8_t xunit = (realx & (uint16_t)0xf0) >> 4;
+		// 获取32为单位的调色板索引字节
+		//
+		const uint8_t attr = (nt + 32 * 30)[(realy >> 5 << 3) | (xunit >> 1)];
+		// 获取属性表内位偏移
+		//xunit & 1 如果是0 在第1列	realy & 0x10 如果是0000 0000 在第1行 
+		//			如果是1 在第2列				 如果是0001 0000 在第2行
+		//y在前 x在后
+		const uint8_t aoffset = ((uint8_t)(xunit & 1) << 1) | ((realy & 0x10) >> 2);
+
+		// 计算高两位
+		// 因为是32色 所以最后<< 3 如果是16色 最后<< 2
+		const uint8_t high = (attr & (0x03 << aoffset)) >> aoffset << 3;
+
+/*		计算图样表位置
+		xuint_t << 1 
+		以16像素为单位渲染 每个目标的对应行在图样表x偏移量
+		realy >> 3 << 5 
+		 << 5 是因为每行有32个tiles，如果realy>>3 表示对应行	*/
+		const uint8_t* pt = nt + ((uint16_t)xunit << 1) + (uint16_t)(realy >> 3 << 5);
+		//渲染的第1个tile在pt中位置(更觉得是以tile为单位的偏移量)
+		const uint8_t pt0 = pt[0];
+		//渲染的第2个tile在pt中位置
+		const uint8_t pt1 = pt[1];
+
+		// 渲染16个像素
+		sfc_render_background_pixel16(
+			high,
+			pattern + pt0 * 16 + (realy & 7),
+			pattern + pt1 * 16 + (realy & 7),
+			aligned_buffer + (i << 4)
+		);
 	}
+	// 将数据复制过去
+	const uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
+	memcpy(buffer, unaligned_buffer, SFC_WIDTH);
+}
 	// 基于行的精灵0命中测试
 
 	// 已经命中了
