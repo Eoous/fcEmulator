@@ -119,6 +119,9 @@ void sfc_ppu_t::sfc_write_ppu_register_via_cpu(uint16_t address, uint8_t data) {
 		// PPU 控制寄存器
 		// 0x2000: Controller ($2000) > write
 		ctrl = data;
+		//D0表示窗口x坐标高位0:00 - 10;1:01 - 11
+		//D1表示窗口y坐标高位0:00 - 01;1:10 - 11
+		//通过这两位可以将窗口移动到任意一页
 		nametable_select = data & 3;
 		break;
 	case 1:
@@ -144,6 +147,7 @@ void sfc_ppu_t::sfc_write_ppu_register_via_cpu(uint16_t address, uint8_t data) {
 	case 5:
 		// 0x2005: Scroll ($2005) >> write x2
 		// PPU 滚动位置寄存器 - 双写
+		//写2次 所以叫双写?
 		scroll[writex2 & 1] = data;
 		++writex2;
 		break;
