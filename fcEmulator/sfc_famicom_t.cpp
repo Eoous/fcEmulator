@@ -429,7 +429,9 @@ void sfc_famicom_t::sfc_render_background_scanline(uint16_t line, const uint8_t 
 			aligned_buffer + (i << 4)
 		);
 	}
+	//printf("%d\n", scrollx & 0x0f);
 	// 将数据复制过去
+	//不知道为什么要(scrollx & 0xf)
 	const uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
 	memcpy(buffer, unaligned_buffer, SFC_WIDTH);
 }
@@ -437,11 +439,17 @@ void sfc_famicom_t::sfc_render_background_scanline(uint16_t line, const uint8_t 
 
 	// 已经命中了
 	if (ppu_.status & (uint8_t)SFC_PPU2002_Sp0Hit) return;
+
 	// 没有必要测试
+	//sp0[line] 对应行数如果有sp0 那么hittest_data是它的颜色
 	const uint8_t hittest_data = sp0[line];
+
+	//hittest_data=0 即超过sp0像素的时候 直接返回
+	//hittest_data=1 即属于sp0内像素的时候 计算下面的
 	if (!hittest_data) return;
 	// 精灵#0的数据
-	uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
+	//uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
+	uint8_t* const unaligned_buffer = aligned_buffer;
 	memset(unaligned_buffer + SFC_WIDTH, 0, 16);
 
 	const uint8_t  xxxxx = ppu_.sprites[3];
@@ -457,7 +465,7 @@ void sfc_famicom_t::sfc_sprite0_hittest(uint8_t buffer[SFC_WIDTH]) {
 	//关闭渲染
 	enum { BOTH_BS = SFC_PPU2001_Back | SFC_PPU2001_Sprite };
 	if ((ppu_.mask& (uint8_t)BOTH_BS) != (uint8_t)BOTH_BS)return;
-	//获取数据以填充
+	//获取sp0的数据以填充
 	const uint8_t yyyyy = ppu_.sprites[0];
 	//0xef以上就算了
 	if (yyyyy >= 0xef) return;
@@ -811,7 +819,7 @@ void sfc_famicom_t::sfc_render_frame_easy(uint8_t * buffer){
 			if (i == sp_overflow_line)
 				ppu_.status |= (uint8_t)SFC_PPU2002_SpOver;
 			// 执行CPU
-			for (; *count < end_cycle_count_this_round;) {
+			while(*count < end_cycle_count_this_round) {
 				//sfc_before_execute();
 				cpu_.sfc_cpu_execute_one();
 			}
@@ -823,9 +831,11 @@ void sfc_famicom_t::sfc_render_frame_easy(uint8_t * buffer){
 		}
 	}
 	// 渲染精灵
+	//240行结束后一次性渲染所有精灵
 	if (ppu_.mask & (uint8_t)SFC_PPU2001_Sprite)
-		sfc_render_sprites( data);
+		sfc_render_sprites(data);
 
+	// 让CPU执行一段时间
 	// 后渲染
 	{
 		end_cycle_count += per_scanline;
@@ -837,14 +847,16 @@ void sfc_famicom_t::sfc_render_frame_easy(uint8_t * buffer){
 		}
 		//printf("%d,%d,%d - 2", end_cycle_count, per_scanline, end_cycle_count_this_round);
 	}
-	// 垂直空白期间
+	//大部分都渲染完了
+	//进入垂直空白期间
 
 	// 开始
+	// VBlank开始标志 或运算让status知道VBlank开始了
 	ppu_.status |= (uint8_t)SFC_PPU2002_VBlank;
 	if (ppu_.ctrl & (uint8_t)SFC_PPU2000_NMIGen) {
 		cpu_.sfc_operation_NMI();
 	}
-	// 执行
+	// CPU执行一段时间
 	for (uint16_t i = 0; i != vblank_line; ++i) {
 		end_cycle_count += per_scanline;
 		const uint32_t end_cycle_count_this_round = end_cycle_count / MASTER_CYCLE_PER_CPU;
