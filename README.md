@@ -2,9 +2,9 @@
 learn fc emulator project
 
 fc模拟器项目 
-目前大部分代码来自于原作者
-本来目的就是把原作者的C代码 改成C++代码
-添加了一些自己的注释理解 
+目前大部分代码来自于原作者  
+本来目的就是把原作者的C代码 改成C++代码  
+添加了一些自己的注释理解  
 https://zhuanlan.zhihu.com/p/43999178
 
 public  
