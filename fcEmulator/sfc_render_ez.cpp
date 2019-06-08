@@ -126,9 +126,15 @@ uint8_t sfc_pack_bool8_into_byte(const uint8_t array[8]) {
 
 
 /// Creates the 128 mask.
+
+/// __m128i _mm_set_epi32(int i3, int i2,int i1, int i0);
+
+/// 使用4个int(32bits)变量来设置__m128i变量
 __m128i sfc_create_128_mask(uint8_t a, uint8_t b) {
 	return _mm_set_epi32(
+		//a的低4位
 		sfc_u32_bit_lut[a & 0xF],
+		//a的高4位
 		sfc_u32_bit_lut[a >> 4],
 		sfc_u32_bit_lut[b & 0xF],
 		sfc_u32_bit_lut[b >> 4]
@@ -143,14 +149,20 @@ void sfc_expand_backgorund_16(
 	uint8_t p3,
 	uint8_t high,
 	uint8_t* output) {
+	//p2是第二个tile的[0] p3是第二个tile的[8]
+	//p0是第一个tile的[0] p1是第一个tile的[8]
 	const __m128i value1 = sfc_create_128_mask(p2, p0);
 	const __m128i value2 = sfc_create_128_mask(p3, p1);
 
+	//这里实现的是32种的颜色表
+	//暂时不知道最低位怎么计算的
 	__m128i value = _mm_or_si128(value1, value2);
 	value = _mm_or_si128(value, _mm_slli_epi32(value1, 1));
 	value = _mm_or_si128(value, _mm_slli_epi32(value2, 2));
+	__m128i t = _mm_set1_epi8(high);
 	value = _mm_or_si128(value, _mm_set1_epi8(high));
 
+	//value是128位 共16字节 对应16个像素
 	(*(__m128i*)output) = value;
 }
 #endif
