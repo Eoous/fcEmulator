@@ -431,34 +431,43 @@ void sfc_famicom_t::sfc_render_background_scanline(uint16_t line, const uint8_t 
 	}
 	//printf("%d\n", scrollx & 0x0f);
 	// 将数据复制过去
-	//不知道为什么要(scrollx & 0xf)
+	// 不知道为什么要(scrollx & 0xf)
 	const uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
 	memcpy(buffer, unaligned_buffer, SFC_WIDTH);
 }
 	// 基于行的精灵0命中测试
 
-	// 已经命中了
+	// 已经命中(在sp0之后)了
+	// 一开始status没有Sp0Hit 命中之后会进行修改 后面的就不会计算
 	if (ppu_.status & (uint8_t)SFC_PPU2002_Sp0Hit) return;
 
 	// 没有必要测试
 	//sp0[line] 对应行数如果有sp0 那么hittest_data是它的颜色
 	const uint8_t hittest_data = sp0[line];
 
-	//hittest_data=0 即超过sp0像素的时候 直接返回
-	//hittest_data=1 即属于sp0内像素的时候 计算下面的
-	if (!hittest_data) return;
-	// 精灵#0的数据
-	//uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
-	uint8_t* const unaligned_buffer = aligned_buffer;
-	memset(unaligned_buffer + SFC_WIDTH, 0, 16);
+	// hittest_data=0 即不属于sp0像素(在sp0之前)的时候 直接返回
+	// hittest_data=1 即属于sp0内像素的时候 计算下面的
+	 if (!hittest_data) return;
 
-	const uint8_t  xxxxx = ppu_.sprites[3];
+	// 精灵#0的数据
+	// uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
+	uint8_t* const unaligned_buffer = aligned_buffer;
+
+	// memset(unaligned_buffer + SFC_WIDTH, 0, 16);		// 原语句
+	// memset(unaligned_buffer, 0, 16);					// 00页的这一行前16个像素全楚数据 实测没用
+
+	// xxxxx 是sp0的x坐标
+	const uint8_t xxxxx = ppu_.sprites[3];
 	const uint8_t hittest = sfc_pack_bool8_into_byte(unaligned_buffer + xxxxx);
+
+	//PPU 的内置硬件把位于内存位置 0 的 Sprite 特殊对待。当这一 Sprite 生成时，一旦其和背景的可见部分重叠在一起，一个被称为 Sprite0 flag 的比特位就被置 1。
 	if (hittest_data & hittest)
 		ppu_.status |= (uint8_t)SFC_PPU2002_Sp0Hit;
 
 }
 
+
+// 实测发现 貌似这部分只是绘制sp0而已，并不进行检测
 void sfc_famicom_t::sfc_sprite0_hittest(uint8_t buffer[SFC_WIDTH]) {
 	//先清空
 	memset(buffer, 0, SFC_WIDTH);
