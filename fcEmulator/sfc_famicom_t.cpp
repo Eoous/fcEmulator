@@ -841,8 +841,9 @@ void sfc_famicom_t::sfc_render_frame_easy(uint8_t * buffer){
 	}
 	// 渲染精灵
 	//240行结束后一次性渲染所有精灵
-	if (ppu_.mask & (uint8_t)SFC_PPU2001_Sprite)
+	if (ppu_.mask & (uint8_t)SFC_PPU2001_Sprite) {
 		sfc_render_sprites(data);
+	}
 
 	// 让CPU执行一段时间
 	// 后渲染
@@ -850,7 +851,7 @@ void sfc_famicom_t::sfc_render_frame_easy(uint8_t * buffer){
 		end_cycle_count += per_scanline;
 		const uint32_t end_cycle_count_this_round = end_cycle_count / MASTER_CYCLE_PER_CPU;
 		uint32_t* const count = &cpu_.cpu_cycle_count;
-		for (; *count < end_cycle_count_this_round;) {
+		while(*count < end_cycle_count_this_round) {
 			//sfc_before_execute();
 			cpu_.sfc_cpu_execute_one();
 		}
