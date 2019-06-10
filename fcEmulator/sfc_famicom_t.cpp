@@ -431,9 +431,9 @@ void sfc_famicom_t::sfc_render_background_scanline(uint16_t line, const uint8_t 
 	}
 	//printf("%d\n", scrollx & 0x0f);
 	// 将数据复制过去
-	// 不知道为什么要(scrollx & 0xf)
+	// +(scrollx & 0xf) 可能是因为要绘制的部分后面多出来16像素
 	const uint8_t* const unaligned_buffer = aligned_buffer + (scrollx & 0x0f);
-	memcpy(buffer, unaligned_buffer, SFC_WIDTH);
+	memcpy(buffer, unaligned_buffer, SFC_WIDTH+(scrollx & 0x0f));
 }
 	// 基于行的精灵0命中测试
 
