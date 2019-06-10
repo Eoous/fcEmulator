@@ -212,7 +212,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	uint16_t sfc_addressing_UNK(uint32_t* const cycle) {
+	inline uint16_t sfc_addressing_UNK(uint32_t* const cycle) {
 		assert(!"UNKNOWN ADDRESSING MODE");
 		return 0;
 	}
@@ -222,7 +222,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	uint16_t sfc_addressing_ACC(uint32_t* const cycle) {
+	inline uint16_t sfc_addressing_ACC(uint32_t* const cycle) {
 		return 0;
 	}
 
@@ -231,7 +231,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	uint16_t sfc_addressing_IMP(uint32_t* const cycle) {
+	inline uint16_t sfc_addressing_IMP(uint32_t* const cycle) {
 		return 0;
 	}
 
@@ -240,7 +240,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	uint16_t sfc_addressing_IMM(uint32_t* const cycle) {
+	inline uint16_t sfc_addressing_IMM(uint32_t* const cycle) {
 		const uint16_t address = SFC_PC;
 		SFC_PC++;
 		return address;
@@ -252,7 +252,7 @@ private:
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
 		//保存的是16位地址 address0是低位 1是高位
-	    uint16_t sfc_addressing_ABS(uint32_t* const cycle) {
+	inline     uint16_t sfc_addressing_ABS(uint32_t* const cycle) {
 		const uint8_t address0 = SFC_READ(SFC_PC++);
 		const uint8_t address1 = SFC_READ(SFC_PC++);
 		return (uint16_t)address0 | (uint16_t)((uint16_t)address1 << 8);
@@ -263,14 +263,14 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	    uint16_t sfc_addressing_ABX(uint32_t* const cycle) {
+	inline     uint16_t sfc_addressing_ABX(uint32_t* const cycle) {
 		const uint16_t base = sfc_addressing_ABS(cycle);
 		const uint16_t rvar = base + SFC_X;
 		*cycle += ((base ^rvar) >> 8) & 1;
 		return rvar;
 	}
 
-		uint16_t sfc_addressing_abx( uint32_t* const cycle) {
+	inline 	uint16_t sfc_addressing_abx( uint32_t* const cycle) {
 			const uint16_t base = sfc_addressing_ABS(cycle);
 			const uint16_t rvar = base + SFC_X;
 			return rvar;
@@ -281,7 +281,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	    uint16_t sfc_addressing_ABY(uint32_t* const cycle) {
+	inline     uint16_t sfc_addressing_ABY(uint32_t* const cycle) {
 		const uint16_t base = sfc_addressing_ABS(cycle);
 		const uint16_t rvar = base + SFC_Y;
 		*cycle += ((base ^ rvar) >> 8) & 1;
@@ -294,7 +294,7 @@ private:
 		/// <param name="famicom">The famicom.</param>
 		/// <param name="cycle">The cycle.</param>
 		/// <returns></returns>
-		 uint16_t sfc_addressing_aby(uint32_t* const cycle) {
+	inline 	 uint16_t sfc_addressing_aby(uint32_t* const cycle) {
 			const uint16_t base = sfc_addressing_ABS(cycle);
 			const uint16_t rvar = base + SFC_Y;
 			return rvar;
@@ -305,7 +305,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	    uint16_t sfc_addressing_ZPG(uint32_t* const cycle) {
+	inline     uint16_t sfc_addressing_ZPG(uint32_t* const cycle) {
 		const uint16_t address = SFC_READ(SFC_PC++);
 		return address;
 	}
@@ -315,7 +315,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	    uint16_t sfc_addressing_ZPX(uint32_t* const cycle) {
+	inline     uint16_t sfc_addressing_ZPX(uint32_t* const cycle) {
 		const uint16_t base = sfc_addressing_ZPG(cycle);
 		const uint16_t index = base + SFC_X;
 		return index & (uint16_t)0x00FF;
@@ -326,7 +326,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	    uint16_t sfc_addressing_ZPY(uint32_t* const cycle) {
+	inline     uint16_t sfc_addressing_ZPY(uint32_t* const cycle) {
 		const uint16_t base = sfc_addressing_ZPG(cycle);
 		const uint16_t index = base + SFC_Y;
 		return index & (uint16_t)0x00FF;
@@ -337,7 +337,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	    uint16_t sfc_addressing_INX(uint32_t* const cycle) {
+	inline     uint16_t sfc_addressing_INX(uint32_t* const cycle) {
 		uint8_t base = SFC_READ(SFC_PC++) + SFC_X;
 		const uint8_t address0 = SFC_READ(base++);
 		const uint8_t address1 = SFC_READ(base++);
@@ -349,7 +349,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	    uint16_t sfc_addressing_INY(uint32_t* const cycle) {
+	inline     uint16_t sfc_addressing_INY(uint32_t* const cycle) {
 		uint8_t base = SFC_READ(SFC_PC++);
 		const uint8_t address0 = SFC_READ(base++);
 		const uint8_t address1 = SFC_READ(base++);
@@ -368,7 +368,7 @@ private:
 		/// <param name="famicom">The famicom.</param>
 		/// <param name="cycle">The cycle.</param>
 		/// <returns></returns>
-		 uint16_t sfc_addressing_iny( uint32_t* const cycle) {
+	 	 uint16_t sfc_addressing_iny( uint32_t* const cycle) {
 			uint8_t base = SFC_READ_PC(SFC_PC++);
 			const uint8_t address0 = SFC_READ(base++);
 			const uint8_t address1 = SFC_READ(base++);
@@ -386,7 +386,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	    uint16_t sfc_addressing_IND(uint32_t* const cycle) {
+	     uint16_t sfc_addressing_IND(uint32_t* const cycle) {
 		// 读取地址
 		const uint16_t base1 = sfc_addressing_ABS(cycle);
 		// 刻意实现6502的BUG
@@ -407,7 +407,7 @@ private:
 	/// </summary>
 	/// <param name=" ">The  .</param>
 	/// <returns></returns>
-	    uint16_t sfc_addressing_REL(uint32_t* const cycle) {
+	inline    uint16_t sfc_addressing_REL(uint32_t* const cycle) {
 		const uint8_t data = SFC_READ(SFC_PC++);
 		const uint16_t address = SFC_PC + (int8_t)data;
 		return address;
@@ -421,7 +421,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_UNK(uint16_t address, uint32_t* const cycle) {
+	inline     void sfc_operation_UNK(uint16_t address, uint32_t* const cycle) {
 		assert(!"UNKNOWN INS");
 	}
 
@@ -430,7 +430,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_SHY(uint16_t address, uint32_t* const cycle) {
+	inline     void sfc_operation_SHY(uint16_t address, uint32_t* const cycle) {
 		sfc_operation_UNK(address,cycle);
 		//const uint8_t result = SFC_Y & (uint8_t)(((uint8_t)address >> 8) + 1);
 		//SFC_WRITE(address, result);
@@ -441,7 +441,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_SHX(uint16_t address, uint32_t* const cycle) {
+	inline     void sfc_operation_SHX(uint16_t address, uint32_t* const cycle) {
 		sfc_operation_UNK(address,cycle);
 		//const uint8_t result = SFC_X & (uint8_t)(((uint8_t)address >> 8) + 1);
 		//SFC_WRITE(address, result);
@@ -452,7 +452,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_TAS(uint16_t address, uint32_t* const cycle) {
+	inline    void sfc_operation_TAS(uint16_t address, uint32_t* const cycle) {
 		sfc_operation_UNK(address,cycle);
 	}
 
@@ -461,7 +461,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_AHX(uint16_t address, uint32_t* const cycle) {
+	inline     void sfc_operation_AHX(uint16_t address, uint32_t* const cycle) {
 		sfc_operation_UNK(address,cycle);
 	}
 
@@ -470,7 +470,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_XAA(uint16_t address, uint32_t* const cycle) {
+	inline     void sfc_operation_XAA(uint16_t address, uint32_t* const cycle) {
 		sfc_operation_UNK(address,cycle);
 	}
 
@@ -581,7 +581,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_ISC(uint16_t address, uint32_t* const cycle) {
+		inline    void sfc_operation_ISC(uint16_t address, uint32_t* const cycle) {
 		sfc_operation_UNK(address,cycle);
 	}
 
@@ -606,7 +606,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_SAX(uint16_t address, uint32_t* const cycle) {
+		inline    void sfc_operation_SAX(uint16_t address, uint32_t* const cycle) {
 		SFC_WRITE(address, SFC_A & SFC_X);
 	}
 
@@ -629,7 +629,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_SBX(uint16_t address, uint32_t* const cycle) {
+		inline    void sfc_operation_SBX(uint16_t address, uint32_t* const cycle) {
 		sfc_operation_UNK(address,cycle);
 	}
 
@@ -665,7 +665,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_AAC(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_AAC(uint16_t address, uint32_t* const cycle) {
 		sfc_operation_UNK(address,cycle);
 	}
 
@@ -699,7 +699,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_ALR(uint16_t address, uint32_t* const cycle) {
+		inline   void sfc_operation_ALR(uint16_t address, uint32_t* const cycle) {
 		sfc_operation_UNK(address,cycle);
 	}
 
@@ -746,7 +746,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_NOP(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_NOP(uint16_t address, uint32_t* const cycle) {
 
 	}
 
@@ -789,7 +789,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_BVC(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_BVC(uint16_t address, uint32_t* const cycle) {
 			if (!SFC_VF) sfc_branch(address, cycle);
 	}
 
@@ -807,7 +807,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_BPL(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_BPL(uint16_t address, uint32_t* const cycle) {
 		if (!SFC_SF) sfc_branch(address, cycle);
 	}
 
@@ -816,7 +816,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_BMI(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_BMI(uint16_t address, uint32_t* const cycle) {
 		if (SFC_SF) sfc_branch(address, cycle);
 	}
 
@@ -825,7 +825,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_BCC(uint16_t address, uint32_t* const cycle) {
+		inline    void sfc_operation_BCC(uint16_t address, uint32_t* const cycle) {
 		if (!SFC_CF) sfc_branch(address, cycle);
 	}
 
@@ -834,7 +834,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_BCS(uint16_t address, uint32_t* const cycle) {
+		inline    void sfc_operation_BCS(uint16_t address, uint32_t* const cycle) {
 		if (SFC_CF) sfc_branch(address, cycle);
 	}
 
@@ -881,7 +881,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_PHP(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_PHP(uint16_t address, uint32_t* const cycle) {
 		SFC_PUSH(SFC_P | (uint8_t)(SFC_FLAG_R | SFC_FLAG_B));
 	}
 
@@ -890,7 +890,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_PLA(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_PLA(uint16_t address, uint32_t* const cycle) {
 		SFC_A = SFC_POP();
 		CHECK_ZSFLAG(SFC_A);
 	}
@@ -900,7 +900,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_PHA(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_PHA(uint16_t address, uint32_t* const cycle) {
 		SFC_PUSH(SFC_A);
 	}
 
@@ -1060,7 +1060,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_SEI(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_SEI(uint16_t address, uint32_t* const cycle) {
 		SFC_IF_SE;
 	}
 
@@ -1069,7 +1069,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_CLI(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_CLI(uint16_t address, uint32_t* const cycle) {
 			SFC_IF_CL;
 		}
 
@@ -1078,7 +1078,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_CLV(uint16_t address, uint32_t* const cycle) {
+		inline    void sfc_operation_CLV(uint16_t address, uint32_t* const cycle) {
 		SFC_VF_CL;
 	}
 
@@ -1087,7 +1087,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_SED(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_SED(uint16_t address, uint32_t* const cycle) {
 		SFC_DF_SE;
 	}
 
@@ -1096,7 +1096,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_CLD(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_CLD(uint16_t address, uint32_t* const cycle) {
 		SFC_DF_CL;
 	}
 
@@ -1105,7 +1105,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_SEC(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_SEC(uint16_t address, uint32_t* const cycle) {
 		SFC_CF_SE;
 	}
 
@@ -1247,7 +1247,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_TXS(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_TXS(uint16_t address, uint32_t* const cycle) {
 		SFC_SP = SFC_X;
 	}
 
@@ -1256,7 +1256,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_TSX(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_TSX(uint16_t address, uint32_t* const cycle) {
 		SFC_X = SFC_SP;
 		CHECK_ZSFLAG(SFC_X);
 	}
@@ -1266,7 +1266,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_TYA(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_TYA(uint16_t address, uint32_t* const cycle) {
 		SFC_A = SFC_Y;
 		CHECK_ZSFLAG(SFC_A);
 	}
@@ -1276,7 +1276,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_TAY(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_TAY(uint16_t address, uint32_t* const cycle) {
 		SFC_Y = SFC_A;
 		CHECK_ZSFLAG(SFC_Y);
 	}
@@ -1286,7 +1286,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_TXA(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_TXA(uint16_t address, uint32_t* const cycle) {
 		SFC_A = SFC_X;
 		CHECK_ZSFLAG(SFC_A);
 	}
@@ -1296,7 +1296,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_TAX(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_TAX(uint16_t address, uint32_t* const cycle) {
 		SFC_X = SFC_A;
 		CHECK_ZSFLAG(SFC_X);
 	}
@@ -1306,7 +1306,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_STY(uint16_t address, uint32_t* const cycle) {
+		inline    void sfc_operation_STY(uint16_t address, uint32_t* const cycle) {
 		SFC_WRITE(address, SFC_Y);
 	}
 
@@ -1315,7 +1315,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_STX(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_STX(uint16_t address, uint32_t* const cycle) {
 		SFC_WRITE(address, SFC_X);
 	}
 
@@ -1324,7 +1324,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_STA(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_STA(uint16_t address, uint32_t* const cycle) {
 		SFC_WRITE(address, SFC_A);
 	}
 
@@ -1333,7 +1333,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_LDY(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_LDY(uint16_t address, uint32_t* const cycle) {
 		SFC_Y = SFC_READ(address);
 		CHECK_ZSFLAG(SFC_Y);
 	}
@@ -1343,7 +1343,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_LDX(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_LDX(uint16_t address, uint32_t* const cycle) {
 		SFC_X = SFC_READ(address);
 		CHECK_ZSFLAG(SFC_X);
 	}
@@ -1353,7 +1353,7 @@ private:
 	/// </summary>
 	/// <param name="address">The address.</param>
 	/// <param name=" ">The  .</param>
-	    void sfc_operation_LDA(uint16_t address, uint32_t* const cycle) {
+		inline     void sfc_operation_LDA(uint16_t address, uint32_t* const cycle) {
 		SFC_A = SFC_READ(address);
 		CHECK_ZSFLAG(SFC_A);
 	}
