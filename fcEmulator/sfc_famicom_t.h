@@ -36,7 +36,7 @@ public:
 	enum { SFC_DISASSEMBLY_BUF_LEN2 = 48 };
 	// 静态成员函数
 	// 智能指针的单例设计
-	static std::shared_ptr<sfc_famicom_t> getInstance(void* arg);
+	//static std::shared_ptr<sfc_famicom_t> getInstance(void* arg);
 
 	// 加载8k PRG-ROM
 	void sfc_load_prgrom_8k(const int& des, const int& src);
@@ -86,6 +86,8 @@ public:
 	//D0 - 0为全局背景色 1为非全局背景色，是背景D1和D2"与"操作的结果
 	//D1 - D5 调色板索引
 	void sfc_render_frame_easy(uint8_t* buffer);
+	// 带参构造函数
+	sfc_famicom_t(void* argument);
 private:
 	// 成员变量
 	void *argument;
@@ -97,8 +99,7 @@ private:
 	// 静态成员变量
 	// 智能指针的单例设计
 	static std::shared_ptr<sfc_famicom_t> singleFamicom;
-	// 带参构造函数
-	sfc_famicom_t(void* argument);
+
 	// 加载和卸载rom
 	sfc_ecode sfc_load_default_rom();
 	sfc_ecode sfc_free_default_rom();

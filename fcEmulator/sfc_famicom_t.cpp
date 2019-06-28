@@ -131,12 +131,12 @@ sfc_rom_info_t sfc_famicom_t::get_rom_info() const {
 
 std::shared_ptr<sfc_famicom_t> sfc_famicom_t::singleFamicom = nullptr;
 
-std::shared_ptr<sfc_famicom_t> sfc_famicom_t::getInstance(void* arg) {
-	if (!singleFamicom) {
-		singleFamicom = std::shared_ptr<sfc_famicom_t>(new sfc_famicom_t(arg));
-	}
-	return singleFamicom;
-}
+//std::shared_ptr<sfc_famicom_t> sfc_famicom_t::getInstance(void* arg) {
+//	if (singleFamicom==nullptr) {
+//		singleFamicom = std::shared_ptr<sfc_famicom_t>(new sfc_famicom_t(arg));
+//	}
+//	return singleFamicom;
+//}
 
 //========================
 //3
