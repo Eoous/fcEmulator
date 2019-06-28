@@ -1,3 +1,9 @@
+#pragma once
+#ifdef _WINDOWS
+#define _CRTDBG_MAP_ALLOC
+#endif
+
+#include <crtdbg.h>
 #include "sfc_famicom_t.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,7 +13,7 @@
 #include <iostream>
 
 
-std::shared_ptr<sfc_famicom_t> p;
+sfc_famicom_t* p;
 uint32_t palette_data[16];
 
 
@@ -180,7 +186,9 @@ void main_render(void* rgba,sfc_famicom_t& famicom)noexcept {
 
 
 int main() {
-	std::shared_ptr<sfc_famicom_t> famicom = sfc_famicom_t::getInstance(nullptr);
+	//_CrtSetBreakAlloc(139);
+	sfc_famicom_t* famicom = new sfc_famicom_t(nullptr);
+	//std::shared_ptr<sfc_famicom_t> famicom = sfc_famicom_t::getInstance(nullptr);
 	p = famicom;
 
 	auto test = famicom->get_rom_info();
@@ -215,7 +223,12 @@ int main() {
 	printf("\n");
 
 	main_cpp(*famicom);
-	getchar();
+	//getchar();
+	delete famicom;
+
+
+	_CrtDumpMemoryLeaks();
+
 	return 0;
 
 }
