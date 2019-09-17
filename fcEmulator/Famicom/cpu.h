@@ -6,8 +6,8 @@
 
 #include <stdint.h>
 #include <assert.h>
-#include "sfc_6502.h"
-#include "sfc_ppu_t.h"
+#include "PPU.h"
+#include "Famicom.h"
 
 // nes的cpu把最后几个地址称为向量
 enum sfc_cpu_vector {

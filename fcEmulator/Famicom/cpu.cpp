@@ -1,4 +1,4 @@
-#include "sfc_cpu.h"
+#include "cpu.h"
 
 uint16_t& sfc_cpu_register_t::get_program_counter()
 {

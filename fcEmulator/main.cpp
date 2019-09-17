@@ -4,12 +4,12 @@
 #endif
 
 #include <crtdbg.h>
-#include "sfc_famicom_t.h"
+#include "Famicom.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <crtdbg.h>
-#include "sfc_ppu_t.h"
-#include "common\d2d_interface.h"
+#include "PPU.h"
+#include "common/d2d_interface.h"
 #include <iostream>
 
 
@@ -223,7 +223,6 @@ int main() {
 	printf("\n");
 
 	main_cpp(*famicom);
-	//getchar();
 	delete famicom;
 
 
@@ -234,7 +233,7 @@ int main() {
 }
 
 //=====================================================
-//接收到键盘上的消息就把对应的信息传给states
+// 接收到键盘上的消息就把对应的信息传给states
 SFC_EXTERN_C void user_input(int index, unsigned char data) SFC_NOEXCEPT {
 	assert(index >= 0 && index < 16);
 	p->cpu_.button_states[index] = data;

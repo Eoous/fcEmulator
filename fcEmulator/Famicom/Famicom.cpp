@@ -1,4 +1,4 @@
-#include "sfc_famicom_t.h"
+#include "Famicom.h"
 
 
 
