@@ -29,7 +29,7 @@ Famicom::Famicom(void *argument):argument(argument)
 
 Famicom::~Famicom()
 {
-	
+	std::cout << "开始析构"<<std::endl;
 	Uninit();
 }
 
@@ -51,6 +51,7 @@ ErrorCode Famicom::Init() {
 }
 
 void Famicom::Uninit() {
+	std::cout << "进入Uninit" << std::endl;
 	FreeDefaultRom();
 }
 
@@ -117,9 +118,10 @@ ErrorCode Famicom::LoadDefaultRom() {
 }
 
 ErrorCode Famicom::FreeDefaultRom() {
+	if (rom_info_.data_prgrom == nullptr)return ERROR_OK;
 	delete [](rom_info_.data_prgrom);
 	rom_info_.data_prgrom = nullptr;
-	//printf("析构了famicomm");
+	printf("析构了famicomm");
 
 
 	return ERROR_OK;
