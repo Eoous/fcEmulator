@@ -37,7 +37,7 @@ static const wchar_t WINDOW_TITLE[] = L"D2D Draw";
 //static bool doit = true;
 
 LRESULT CALLBACK ThisWndProc(HWND , UINT , WPARAM , LPARAM ) noexcept;
-void DoRender(uint32_t sync, sfc_famicom_t& famicom) noexcept;
+void DoRender(uint32_t sync, Famicom& famicom) noexcept;
 bool InitD3D(HWND) noexcept;
 void ClearD3D() noexcept;
 
@@ -52,7 +52,7 @@ inline void SafeRelease(Interface *&pInterfaceToRelease) {
 uint32_t g_sync = 1;
 uint32_t g_bg_data[256 * 256 + 256];
 
-extern "C" void main_cpp(sfc_famicom_t& famicom) noexcept {
+extern "C" void main_cpp(Famicom& famicom) noexcept {
     // DPIAware
     ::SetProcessDPIAware();
     // 注册窗口
@@ -147,7 +147,7 @@ LRESULT CALLBACK ThisWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 }
 
 
-void DoRender(uint32_t sync, sfc_famicom_t& famicom) noexcept {
+void DoRender(uint32_t sync, Famicom& famicom) noexcept {
     main_render(g_bg_data,famicom);
     const auto hr0 = g_data.d2d_bg->CopyFromMemory(nullptr, g_bg_data, 256 * 4);
     assert(SUCCEEDED(hr0));

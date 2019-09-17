@@ -6,121 +6,120 @@
 #include <iostream>
 
 //======================
-#include "sfc_rom.h"
-#include "sfc_code.h"
-#include "sfc_cpu.h"
-#include "sfc_ppu_t.h"
-#include "sfc_config.h"
-#include "sfc_render_ez.h"
+#include "Rom.h"
+#include "Code.h"
+#include "cpu/cpu.h"
+#include "ppu/ppu.h"
+#include "ppu/Config.h"
+#include "Render.h"
 //======================
-enum sfc_button_index {
-	SFC_BUTTON_A = 0,
-	SFC_BUTTON_B,
-	SFC_BUTTON_SELECT,
-	SFC_BUTTON_START,
-	SFC_BUTTON_UP,
-	SFC_BUTTON_DOWN,
-	SFC_BUTTON_LEFT,
-	SFC_BUTTON_RIGHT,
+enum ButtonIndex {
+	BUTTON_A = 0,
+	BUTTON_B,
+	BUTTON_SELECT,
+	BUTTON_START,
+	BUTTON_UP,
+	BUTTON_DOWN,
+	BUTTON_LEFT,
+	BUTTON_RIGHT,
 };
 
-enum sfc_constant {
-	SFC_WIDTH = 256,
-	SFC_HEIGHT = 240,
-	SFC_SPRITE_COUNT = 64,
+enum Constant {
+	WIDTH = 256,
+	HEIGHT = 240,
+	SPRITE_COUNT = 64,
 };
-
-class sfc_famicom_t
+class Famicom
 {
 public:
-	enum { SFC_DISASSEMBLY_BUF_LEN2 = 48 };
+	enum { DISASSEMBLY_BUF_LEN2 = 48 };
 	// 静态成员函数
 	// 智能指针的单例设计
-	//static std::shared_ptr<sfc_famicom_t> getInstance(void* arg);
+	//static std::shared_ptr<Famicom> getInstance(void* arg);
 
 	// 加载8k PRG-ROM
-	void sfc_load_prgrom_8k(const int& des, const int& src);
+	void Load8kPRG(const int& des, const int& src);
 
 	// 析构函数
-	~sfc_famicom_t();
+	~Famicom();
 
 	//加载新的ROM
-	sfc_ecode sfc_load_new_rom();
+	ErrorCode LoadNewRom();
 	//加载mapper
-	sfc_ecode sfc_load_mapper(const uint8_t& id);
+	ErrorCode LoadMapper(const uint8_t& id);
 	// mapper 000 - NROM 重置
-	sfc_ecode sfc_mapper_00_reset();
+	ErrorCode Mapper00Reset();
 	//CPU
-	sfc_cpu cpu_;
+	cpu cpu_;
 	//PPU
-	sfc_ppu_t ppu_;
+	ppu ppu_;
 
-	void sfc_before_execute();
+	void BeforeExecute();
 	//=============
-	uint32_t palette_data[16];
+	uint32_t palette_data_[16];
 //========================================================
 //	cpu部分
 
 	//指定地方反汇编
-	void sfc_fc_disassembly(uint16_t address, char buf[]);
+	void FcDisassembly(uint16_t address, char buf[]);
 	//sfc cpu execute one instruction
 	
-	sfc_rom_info_t get_rom_info() const;
+	RomInfo GetRomInfo() const;
 
 	//=================================================
 	//Step 4
 	//设置名称表用仓库
-	void sfc_setup_nametable_bank();
+	void SetupNametableBank();
 
 	//开始垂直空白标记
-	void sfc_vblank_flag_start();
+	void StartVblankFlag();
 	//结束垂直空白标记
-	void sfc_vblank_flag_end();
+	void EndVblankFlag();
 	//不可屏蔽中断 垂直空白
-	void sfc_do_vblank();
+	void DoVblank();
 
 	//载入1kCHR ROM
-	void sfc_load_chrrom_1k(int des, int src);
+	void Load1kCHR(int des, int src);
 	//==================================================
 	//使用简易模式渲染一帧，效率较高
 	//D0 - 0为全局背景色 1为非全局背景色，是背景D1和D2"与"操作的结果
 	//D1 - D5 调色板索引
-	void sfc_render_frame_easy(uint8_t* buffer);
+	void RenderFrameEasy(uint8_t* buffer);
 	// 带参构造函数
-	sfc_famicom_t(void* argument);
+	Famicom(void* argument);
 private:
 	// 成员变量
 	void *argument;
-	sfc_rom_info_t rom_info;
-	sfc_config_t config_;
+	RomInfo rom_info_;
+	Config config_;
 	//重置
-	sfc_ecode sfc_famicom_reset();
+	ErrorCode Reset();
 	//==================================================
 	// 静态成员变量
 	// 智能指针的单例设计
-	static std::shared_ptr<sfc_famicom_t> singleFamicom;
+	static std::shared_ptr<Famicom> singleFamicom;
 
 	// 加载和卸载rom
-	sfc_ecode sfc_load_default_rom();
-	sfc_ecode sfc_free_default_rom();
+	ErrorCode LoadDefaultRom();
+	ErrorCode FreeDefaultRom();
 	// ban
-	sfc_famicom_t(const sfc_famicom_t& );
-	sfc_famicom_t operator=(const sfc_famicom_t& );
+	Famicom(const Famicom& );
+	Famicom operator=(const Famicom& );
 	// 初始化和去初始化
-	sfc_ecode sfc_famicom_init();
-	void sfc_famicom_uninit();
+	ErrorCode Init();
+	void Uninit();
 	//render background scanline
-	void sfc_render_background_scanline(uint16_t line, const uint8_t sp0[SFC_HEIGHT + (16)], uint8_t* buffer);
+	void RenderBackgroundScanline(uint16_t line, const uint8_t sp0[HEIGHT + (16)], uint8_t* buffer);
 	//the sprite0 hittest.
-	void sfc_sprite0_hittest(uint8_t buffer[SFC_WIDTH]);
+	void Sprite0HitTest(uint8_t buffer[WIDTH]);
 	//the sprite overflow test.
-	uint16_t sfc_sprite_overflow_test();
+	uint16_t SpriteOverflowTest();
 	//the sprite expand 8.
-	void sfc_sprite_expand_8_on(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
-	void sfc_sprite_expand_8_op(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
-	void sfc_sprite_expand_8_rn(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
-	void sfc_sprite_expand_8_rp(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
-	//the render sprites
-	void sfc_render_sprites(uint8_t* buffer);
+	void SpriteExpandOn(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
+	void SpriteExpandOp(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
+	void SpriteExpandRn(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
+	void SpriteExpandRp(uint8_t p0, uint8_t p1, uint8_t high, uint8_t* output);
+	//the render sprites_
+	void RenderSprites(uint8_t* buffer);
 
 };

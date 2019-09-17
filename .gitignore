@@ -3,6 +3,11 @@
 
 # User-specific files
 *.suo
+*.vcxproj
+*.rc
+
+*.filters
+
 *.user
 *.userosscache
 *.sln.docstates
