@@ -13,7 +13,7 @@
 #include <iostream>
 
 
-Famicom* p;
+std::shared_ptr<Famicom> temp;
 uint32_t palette_data[16];
 
 
@@ -161,14 +161,14 @@ void main_render(void* rgba,Famicom& famicom)noexcept {
 	//==========================================================
 	//step7
 	uint8_t buffer[256 * 256];
-	p->RenderFrameEasy(buffer);
-	//p->sfc_render_frame(buffer);
+	famicom.RenderFrameEasy(buffer);
+	//temp->sfc_render_frame(buffer);
 
 	//生成调色板数据
 	uint32_t palette[32];
 
 	for (int i = 0; i != 32; ++i) {
-		palette[i] = stdPalette[p->ppu_.spindexes_[i]].data;
+		palette[i] = stdPalette[famicom.ppu_.spindexes_[i]].data;
 	}
 	//镜像数据
 	palette[4 * 1] = palette[0];
@@ -184,12 +184,11 @@ void main_render(void* rgba,Famicom& famicom)noexcept {
 	}
 }
 
-
-int main() {
-	//_CrtSetBreakAlloc(139);
-	Famicom* famicom = new Famicom(nullptr);
-	//std::shared_ptr<Famicom> famicom = Famicom::getInstance(nullptr);
-	p = famicom;
+void run()
+{
+	//Famicom* famicom = new Famicom(nullptr);
+	std::shared_ptr<Famicom> famicom = Famicom::getInstance(nullptr);
+	temp = famicom;
 
 	auto test = famicom->GetRomInfo();
 	printf("ROM:PRG-ROM: %d x 16kb	CHR-ROM %d x 8kb	Mapper: %03d\n",
@@ -223,11 +222,18 @@ int main() {
 	printf("\n");
 
 	main_cpp(*famicom);
-	delete famicom;
+	//delete famicom;
+
+	std::cout << famicom.use_count() << std::endl;
+	
+	std::cout << famicom.use_count() << std::endl;
+}
 
 
+int main() {
+	//_CrtSetBreakAlloc(156);
+	run();
 	_CrtDumpMemoryLeaks();
-
 	return 0;
 
 }
@@ -236,7 +242,7 @@ int main() {
 // 接收到键盘上的消息就把对应的信息传给states
 SFC_EXTERN_C void user_input(int index, unsigned char data) SFC_NOEXCEPT {
 	assert(index >= 0 && index < 16);
-	p->cpu_.button_states_[index] = data;
+	temp->cpu_.button_states_[index] = data;
 }
 //=====================================================
 SFC_EXTERN_C int sub_render(void* rgba) SFC_NOEXCEPT {
@@ -245,7 +251,7 @@ SFC_EXTERN_C int sub_render(void* rgba) SFC_NOEXCEPT {
 	//生成调色板颜色
 	{
 		for (int i = 0; i != 16; ++i) {
-			palette_data[i] = stdPalette[p->ppu_.spindexes_[i + 16]].data;
+			palette_data[i] = stdPalette[temp->ppu_.spindexes_[i + 16]].data;
 		}
 		palette_data[4 * 1] = palette_data[0];
 		palette_data[4 * 2] = palette_data[0];
@@ -258,11 +264,11 @@ SFC_EXTERN_C int sub_render(void* rgba) SFC_NOEXCEPT {
 	//精灵图样地址
 	//4是从$1000开始
 	//0是从$0000开始
-	const uint8_t* spp = p->ppu_.banks_[p->ppu_.ctrl_ & PPU2000_SpTabl ? 4 : 0];
+	const uint8_t* spp = temp->ppu_.banks_[temp->ppu_.ctrl_ & PPU2000_SpTabl ? 4 : 0];
 	
 
 	for (int i = 63; i != -1; --i) {
-		const uint8_t* ptr = p->ppu_.sprites_ + i * 4;
+		const uint8_t* ptr = temp->ppu_.sprites_ + i * 4;
 		const uint8_t yy = ptr[0];
 		const uint8_t ii = ptr[1];	//Tile索引号(类似于名称表)
 		const uint8_t aa = ptr[2];

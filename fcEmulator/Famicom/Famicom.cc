@@ -131,12 +131,12 @@ RomInfo Famicom::GetRomInfo() const {
 
 std::shared_ptr<Famicom> Famicom::singleFamicom = nullptr;
 
-//std::shared_ptr<Famicom> Famicom::getInstance(void* arg) {
-//	if (singleFamicom==nullptr) {
-//		singleFamicom = std::shared_ptr<Famicom>(new Famicom(arg));
-//	}
-//	return singleFamicom;
-//}
+std::shared_ptr<Famicom> Famicom::getInstance(void* arg) {
+	if (singleFamicom==nullptr) {
+		singleFamicom = std::shared_ptr<Famicom>(new Famicom(arg));
+	}
+	return singleFamicom;
+}
 
 //========================
 //3

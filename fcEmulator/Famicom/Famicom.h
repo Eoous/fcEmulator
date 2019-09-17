@@ -35,7 +35,7 @@ public:
 	enum { DISASSEMBLY_BUF_LEN2 = 48 };
 	// 静态成员函数
 	// 智能指针的单例设计
-	//static std::shared_ptr<Famicom> getInstance(void* arg);
+	static std::shared_ptr<Famicom> getInstance(void* arg);
 
 	// 加载8k PRG-ROM
 	void Load8kPRG(const int& des, const int& src);
