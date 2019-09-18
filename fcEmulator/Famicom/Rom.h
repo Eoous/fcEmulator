@@ -8,8 +8,8 @@ struct RomInfo {
 	typedef unsigned int            uint32_t;	*/
 
 
-	uint8_t *data_prgrom;
-	uint8_t *data_chrrom;
+	std::shared_ptr<uint8_t> data_prgrom;
+	std::shared_ptr<uint8_t> data_chrrom;
 
 	uint32_t count_prgrom16kb;
 	uint32_t count_chrrom_8kb;
