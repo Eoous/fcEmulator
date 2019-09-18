@@ -59,7 +59,7 @@ void Famicom::Uninit() {
 
 ErrorCode Famicom::LoadDefaultRom() {
 	assert(rom_info_.data_prgrom == nullptr && "FREE FIRST");
-	FILE * file = fopen("mario.nes", "rb");
+	FILE *const file = fopen("mario.nes", "rb");
 
 	if (!file) {
 		return ERROR_FILE_NOT_FOUNT;
@@ -79,28 +79,20 @@ ErrorCode Famicom::LoadDefaultRom() {
 			const size_t size1 = 16 * 1024 * nes_header.count_prgrom16kb;
 			// 允许没有CHR-ROM(使用CHR-RAM代替)
 			const size_t size2 = 8 * 1024 * std::max(nes_header.count_chrrom_8kb , (uint8_t)1);
-			auto Del = [](uint8_t* ptr) {
-				std::cout << "开始delte文件" << std::endl;
-				delete[]ptr;
-			};
-			std::shared_ptr<uint8_t> ptr(new uint8_t[size1],Del);
-			std::shared_ptr<uint8_t> ptr2(new uint8_t[size2], Del);
+			uint8_t* const ptr = new uint8_t[size1+size2];
 
 			//内存申请成功
-			if (ptr&&ptr2) {
+			if (ptr) {
 				code = ERROR_OK;
 
 
 				if (nes_header.control1 & NES_TRAINER) {
 					fseek(file, 512, SEEK_CUR);
 				}
-				fread(&*ptr, size1, 1, file);
-				fread(&*ptr2, size2, 1, file);
+				fread(ptr, size1 + size2, 1, file);
 
-				// delete测试
-
-				rom_info_.data_prgrom = std::move(ptr);
-				rom_info_.data_chrrom = std::move(ptr2);
+				rom_info_.data_prgrom = ptr;
+				rom_info_.data_chrrom = ptr + size1;
 				rom_info_.count_prgrom16kb = nes_header.count_prgrom16kb;
 				rom_info_.count_chrrom_8kb = nes_header.count_chrrom_8kb;
 
@@ -126,10 +118,10 @@ ErrorCode Famicom::LoadDefaultRom() {
 }
 
 ErrorCode Famicom::FreeDefaultRom() {
-	//if (rom_info_.data_prgrom == nullptr)return ERROR_OK;
-	//delete [](rom_info_.data_prgrom);
-	//rom_info_.data_prgrom = nullptr;
-	//printf("析构了famicomm");
+	if (rom_info_.data_prgrom == nullptr)return ERROR_OK;
+	delete [](rom_info_.data_prgrom);
+	rom_info_.data_prgrom = nullptr;
+	printf("析构了famicomm");
 
 
 	return ERROR_OK;
@@ -152,7 +144,7 @@ std::shared_ptr<Famicom> Famicom::getInstance(void* arg) {
 //3
 //载入8k PRG-ROM
 void Famicom::Load8kPRG(const int& des, const int& src) {
-	cpu_.prg_banks_[4 + des] = &*rom_info_.data_prgrom + 8 * 1024 * src;
+	cpu_.prg_banks_[4 + des] = rom_info_.data_prgrom + 8 * 1024 * src;
 }
 
 
@@ -342,7 +334,7 @@ void Famicom::DoVblank() {
 
 //
 void Famicom::Load1kCHR(int des, int src) {
-	ppu_.banks_[des] = &*rom_info_.data_chrrom + 1024 * src;
+	ppu_.banks_[des] = rom_info_.data_chrrom + 1024 * src;
 }
 
 //=========================================
