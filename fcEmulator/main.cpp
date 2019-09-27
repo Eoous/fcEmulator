@@ -195,30 +195,7 @@ void run()
 		(int)test.count_prgrom16kb,
 		(int)test.count_chrrom_8kb,
 		(int)test.mapper_number);
-	uint16_t v0 = famicom->cpu_.ReadAddress(VECTOR_NMI + 0);
-	uint16_t d0 = famicom->cpu_.ReadAddress(VECTOR_NMI + 1);
-	v0 |= d0 << 8;
-	uint16_t v1 = famicom->cpu_.ReadAddress(VECTOR_RESET + 0);
-	uint16_t d1 = famicom->cpu_.ReadAddress(VECTOR_RESET + 1);
-	v1 |= d1 << 8;
-	uint16_t v2 = famicom->cpu_.ReadAddress(VECTOR_IRQ + 0);
-	uint16_t d2 = famicom->cpu_.ReadAddress(VECTOR_IRQ + 1);
-	v2 |= d2 << 8;
 
-	printf("ROM: NMI: $%04X  RESET: $%04X  IRQ/BRK: $%04X\n", (int)v0, (int)v1, (int)v2);
-
-	//===================================
-	char b0[48], b1[48], b2[48];
-
-	famicom->FcDisassembly(v0, b0);
-	famicom->FcDisassembly(v1, b1);
-	famicom->FcDisassembly(v2, b2);
-	printf(
-		"NMI:     %s\n"
-		"RESET:   %s\n"
-		"IRQ/BRK: %s\n",
-		b0, b1, b2
-	);
 	printf("\n");
 
 	main_cpp(*famicom);

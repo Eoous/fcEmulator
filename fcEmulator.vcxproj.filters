@@ -10,6 +10,9 @@
     <Filter Include="Famicom\ppu">
       <UniqueIdentifier>{251ece62-6425-4147-bf53-9c0fc12e09ea}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mfc">
+      <UniqueIdentifier>{9163b370-52ca-4367-a669-a90615c7ed1d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fcEmulator\Famicom\Code.h">
@@ -36,6 +39,9 @@
     <ClInclude Include="fcEmulator\Famicom\ppu\ppu.h">
       <Filter>Famicom\ppu</Filter>
     </ClInclude>
+    <ClInclude Include="fcEmulator\common\d2d_interface.h">
+      <Filter>mfc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="fcEmulator\Famicom\Famicom.cc">
@@ -57,5 +63,8 @@
       <Filter>Famicom\ppu</Filter>
     </ClCompile>
     <ClCompile Include="fcEmulator\main.cpp" />
+    <ClCompile Include="fcEmulator\common\d2d_draw.cpp">
+      <Filter>mfc</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

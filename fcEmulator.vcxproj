@@ -22,7 +22,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{91C21AD4-E737-4636-8684-D80A491425F2}</ProjectGuid>
     <RootNamespace>fcEmulator</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -41,8 +41,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -87,6 +87,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -123,6 +124,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="fcEmulator\common\d2d_interface.h" />
     <ClInclude Include="fcEmulator\Famicom\Code.h" />
     <ClInclude Include="fcEmulator\Famicom\cpu\6502.h" />
     <ClInclude Include="fcEmulator\Famicom\cpu\cpu.h" />
@@ -133,6 +135,7 @@
     <ClInclude Include="fcEmulator\Famicom\Rom.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="fcEmulator\common\d2d_draw.cpp" />
     <ClCompile Include="fcEmulator\Famicom\cpu\6502.cc" />
     <ClCompile Include="fcEmulator\Famicom\cpu\cpu.cc" />
     <ClCompile Include="fcEmulator\Famicom\Famicom.cc" />
