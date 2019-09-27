@@ -5,8 +5,6 @@
 *.suo
 *.rc
 
-*.filters
-
 *.user
 *.userosscache
 *.sln.docstates

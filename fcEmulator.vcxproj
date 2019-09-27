@@ -20,15 +20,15 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
-    <ProjectGuid>{DF910F61-14D3-45BB-83C2-D6B7E2DFAAA3}</ProjectGuid>
+    <ProjectGuid>{91C21AD4-E737-4636-8684-D80A491425F2}</ProjectGuid>
     <RootNamespace>fcEmulator</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -76,7 +76,6 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -124,15 +123,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="fcEmulator\Famicom\cpu\6502.cc" />
-    <ClCompile Include="fcEmulator\Famicom\cpu\cpu.cc" />
-    <ClCompile Include="fcEmulator\Famicom\Famicom.cc" />
-    <ClCompile Include="fcEmulator\Famicom\ppu\Config.cc" />
-    <ClCompile Include="fcEmulator\Famicom\ppu\ppu.cc" />
-    <ClCompile Include="fcEmulator\Famicom\Render.cc" />
-    <ClCompile Include="fcEmulator\main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="fcEmulator\Famicom\Code.h" />
     <ClInclude Include="fcEmulator\Famicom\cpu\6502.h" />
     <ClInclude Include="fcEmulator\Famicom\cpu\cpu.h" />
@@ -141,6 +131,15 @@
     <ClInclude Include="fcEmulator\Famicom\ppu\ppu.h" />
     <ClInclude Include="fcEmulator\Famicom\Render.h" />
     <ClInclude Include="fcEmulator\Famicom\Rom.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="fcEmulator\Famicom\cpu\6502.cc" />
+    <ClCompile Include="fcEmulator\Famicom\cpu\cpu.cc" />
+    <ClCompile Include="fcEmulator\Famicom\Famicom.cc" />
+    <ClCompile Include="fcEmulator\Famicom\ppu\Config.cc" />
+    <ClCompile Include="fcEmulator\Famicom\ppu\ppu.cc" />
+    <ClCompile Include="fcEmulator\Famicom\Render.cc" />
+    <ClCompile Include="fcEmulator\main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
