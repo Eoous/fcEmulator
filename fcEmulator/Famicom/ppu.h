@@ -16,10 +16,10 @@ FROM::http://blog.jobbole.com/87068/
 
 //调色板数据
 //alpha（参数a）通道一般用作不透明度参数。
-const union PaletteData {
+const union sfc_palette_data {
 	struct { uint8_t r, g, b, a; };
 	uint32_t    data;
-} stdPalette[64] = {
+} sfc_stdpalette[64] = {
 	{ 0x7F, 0x7F, 0x7F, 0xFF },{ 0x20, 0x00, 0xB0, 0xFF },{ 0x28, 0x00, 0xB8, 0xFF },{ 0x60, 0x10, 0xA0, 0xFF },
 	{ 0x98, 0x20, 0x78, 0xFF },{ 0xB0, 0x10, 0x30, 0xFF },{ 0xA0, 0x30, 0x00, 0xFF },{ 0x78, 0x40, 0x00, 0xFF },
 	{ 0x48, 0x58, 0x00, 0xFF },{ 0x38, 0x68, 0x00, 0xFF },{ 0x38, 0x6C, 0x00, 0xFF },{ 0x30, 0x60, 0x40, 0xFF },
@@ -43,104 +43,104 @@ const union PaletteData {
 
 /// PPU用标志 - $2000 - CTRL
 /// </summary>
-enum ppuFlag2000 {
-	PPU2000_NMIGen = 0x80, // [0x2000]VBlank期间是否产生NMI
-	PPU2000_Sp8x16 = 0x20, // [0x2000]精灵为8x16(1), 还是8x8(0)
-	PPU2000_BgTabl = 0x10, // [0x2000]背景调色板表地址$1000(1), $0000(0)
-	PPU2000_SpTabl = 0x08, // [0x2000]精灵调色板表地址$1000(1), $0000(0), 8x16模式下被忽略
-	PPU2000_VINC32 = 0x04, // [0x2000]VRAM读写增加值32(1), 1(0)
+enum sfc_ppu_flag_2000 {
+	SFC_PPU2000_NMIGen = 0x80, // [0x2000]VBlank期间是否产生NMI
+	SFC_PPU2000_Sp8x16 = 0x20, // [0x2000]精灵为8x16(1), 还是8x8(0)
+	SFC_PPU2000_BgTabl = 0x10, // [0x2000]背景调色板表地址$1000(1), $0000(0)
+	SFC_PPU2000_SpTabl = 0x08, // [0x2000]精灵调色板表地址$1000(1), $0000(0), 8x16模式下被忽略
+	SFC_PPU2000_VINC32 = 0x04, // [0x2000]VRAM读写增加值32(1), 1(0)
 };
 
 /// PPU用标志 - $2001 - MASK
 /// </summary>
-enum ppuFlag2001 {
-	PPU2001_Grey = 0x01, // 灰阶使能
-	PPU2001_BackL8 = 0x02, // 显示最左边的8像素背景
-	PPU2001_SpriteL8 = 0x04, // 显示最左边的8像素精灵
-	PPU2001_Back = 0x08, // 背景显示使能
-	PPU2001_Sprite = 0x10, // 精灵显示使能
+enum sfc_ppu_flag_2001 {
+	SFC_PPU2001_Grey = 0x01, // 灰阶使能
+	SFC_PPU2001_BackL8 = 0x02, // 显示最左边的8像素背景
+	SFC_PPU2001_SpriteL8 = 0x04, // 显示最左边的8像素精灵
+	SFC_PPU2001_Back = 0x08, // 背景显示使能
+	SFC_PPU2001_Sprite = 0x10, // 精灵显示使能
 
-	PPU2001_NTSCEmR = 0x20, // NTSC 强调红色
-	PPU2001_NTSCEmG = 0x40, // NTSC 强调绿色
-	PPU2001_NTSCEmB = 0x80, // NTSC 强调蓝色
+	SFC_PPU2001_NTSCEmR = 0x20, // NTSC 强调红色
+	SFC_PPU2001_NTSCEmG = 0x40, // NTSC 强调绿色
+	SFC_PPU2001_NTSCEmB = 0x80, // NTSC 强调蓝色
 
-	PPU2001_PALEmG = 0x20, // PAL 强调绿色
-	PPU2001_PALEmR = 0x40, // PAL 强调红色
-	PPU2001_PALEmB = 0x80, // PAL 强调蓝色
+	SFC_PPU2001_PALEmG = 0x20, // PAL 强调绿色
+	SFC_PPU2001_PALEmR = 0x40, // PAL 强调红色
+	SFC_PPU2001_PALEmB = 0x80, // PAL 强调蓝色
 };
 
 
 /// PPU用标志 - $2002 - STATUS
 /// </summary>
-enum ppuFlag2002 {
-	PPU2002_VBlank = 0x80, // [0x2002]垂直空白间隙标志
-	PPU2002_Sp0Hit = 0x40, // [0x2002]零号精灵命中标志
-	PPU2002_SpOver = 0x20, // [0x2002]精灵溢出标志
+enum sfc_ppu_flag_2002 {
+	SFC_PPU2002_VBlank = 0x80, // [0x2002]垂直空白间隙标志
+	SFC_PPU2002_Sp0Hit = 0x40, // [0x2002]零号精灵命中标志
+	SFC_PPU2002_SpOver = 0x20, // [0x2002]精灵溢出标志
 };
 
-enum ppuFlagSpriteAttr {
-	SPATTR_FlipV = 0x80, // 垂直翻转
-	SPATTR_FlipH = 0x40, // 水平翻转
-	SPATTR_Priority = 0x20, // 优先位
+enum sfc_ppu_flag_sprite_attr {
+	SFC_SPATTR_FlipV = 0x80, // 垂直翻转
+	SFC_SPATTR_FlipH = 0x40, // 水平翻转
+	SFC_SPATTR_Priority = 0x20, // 优先位
 };
 
-class ppu
+class sfc_ppu_t
 {
 public:
-	ppu();
-	~ppu();
+	sfc_ppu_t();
+	~sfc_ppu_t();
 
 	//====================================
 	//内存地址库
-	uint8_t* banks_[0x4000 / 0x0400];
+	uint8_t* banks[0x4000 / 0x0400];
 	//名称选择表(PPUCTRL低2位, 以及渲染中VRAM指针AB位)
 	//D0表示窗口x坐标高位0:00 - 10;1:01 - 11
 	//D1表示窗口y坐标高位0:00 - 01;1:10 - 11
 	//通过这两位可以将窗口移动到任意一页
-	uint8_t nametable_select_;
+	uint8_t nametable_select;
 	//当前允许使用的垂直滚动偏移
 	//横轴游戏正常情况下一般为0
-	uint8_t now_scrolly_;
+	uint8_t now_scrolly;
 	//VRAM地址
-	uint16_t vramaddr_;
+	uint16_t vramaddr;
 	//寄存器 PPUCTRL	@$2000
-	uint8_t ctrl_;
+	uint8_t ctrl;
 	//寄存器 PPUMASK	@$2001
-	uint8_t mask_;
+	uint8_t mask;
 	//寄存器 PPUSTATUS	@$2002
-	uint8_t status_;
+	uint8_t status;
 	//寄存器 OAMADDR	@$2003
-	uint8_t oamaddr_;
+	uint8_t oamaddr;
 	
 	//滚动偏移
 	//第一次写入x坐标低位	x坐标范围(0,511)(0,1ff)这里最多写入ff大小
 	//第二次写入y坐标低位	y坐标范围(0,239)和(256,495) (0,1ef)这里最多写入ef大小	
 	//横轴游戏正常情况下y一般为0
-	uint8_t scroll_[2];
+	uint8_t scroll[2];
 	//滚动偏移双写位置记录
-	uint8_t writex2_;
+	uint8_t writex2;
 	//显存读取缓冲值
-	uint8_t pseudo_;
+	uint8_t pseudo;
 	//精灵调色板索引
-	uint8_t spindexes_[0x20];
+	uint8_t spindexes[0x20];
 	//精灵数据 :256B -以32位对齐
 	union {
 		//以32位对齐
-		uint32_t aligned_buffer_[0x100 / 4];
+		uint32_t aligned_buffer[0x100 / 4];
 		//数据
-		uint8_t sprites_[0x100];
+		uint8_t sprites[0x100];
 	};
 
 	//====================================
 	//读取PPU地址
-	uint8_t ReadAddressOfPPU(uint16_t address);
+	uint8_t sfc_read_ppu_address(uint16_t address);
 	//写入PPU地址
-	void WriteAddressOfPPU(uint16_t address, uint8_t data);
+	void sfc_write_ppu_address(uint16_t address, uint8_t data);
 
 	//使用CPU地址空间读取PPU寄存器
-	uint8_t ReadRegisterViaCPU(uint16_t);
+	uint8_t sfc_read_ppu_register_via_cpu(uint16_t);
 	//使用CPU地址空间写入PPU寄存器
-	void WriteRegisterViaCPU(uint16_t, uint8_t);
+	void sfc_write_ppu_register_via_cpu(uint16_t, uint8_t);
 
 private:
 

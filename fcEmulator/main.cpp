@@ -4,16 +4,20 @@
 #endif
 
 #include <crtdbg.h>
-#include "Famicom/Famicom.h"
+#include "Famicom.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <crtdbg.h>
-#include "Famicom/ppu/ppu.h"
+#include "PPU.h"
 #include "common/d2d_interface.h"
 #include <iostream>
 
 
+<<<<<<< HEAD
 std::shared_ptr<Famicom> temp;
+=======
+sfc_famicom_t* p;
+>>>>>>> parent of bfcbea9... modify names of most of files
 uint32_t palette_data[16];
 
 
@@ -132,43 +136,52 @@ void expand_line_8_r(uint8_t p0, uint8_t p1, uint8_t high, uint32_t* output) {
 /// 主渲染
 /// </summary>
 /// <param name="rgba">The RGBA.</param>
-void main_render(void* rgba,Famicom& famicom)noexcept {
+void main_render(void* rgba,sfc_famicom_t& famicom)noexcept {
 	uint32_t* data = (uint32_t*)rgba;
 
 	//for (int i = 0; i != 10000; ++i)
 	//{
-	//	//famicom.BeforeExecute();
-	//	famicom.cpu_.ExecuteOnce();
+	//	//famicom.sfc_before_execute();
+	//	famicom.cpu_.sfc_cpu_execute_one();
 	//}
-	//famicom.DoVblank();
+	//famicom.sfc_do_vblank();
 
 	//// 生成调色板颜色
 	//{
 	//	for (int i = 0; i != 16; ++i) {
-	//		palette_data_[i] =stdPalette[famicom.ppu_.spindexes_[i]].data_;
+	//		palette_data[i] =sfc_stdpalette[famicom.ppu_.spindexes[i]].data;
 	//	}
-	//	palette_data_[4 * 1] = palette_data_[0];
-	//	palette_data_[4 * 2] = palette_data_[0];
-	//	palette_data_[4 * 3] = palette_data_[0];
+	//	palette_data[4 * 1] = palette_data[0];
+	//	palette_data[4 * 2] = palette_data[0];
+	//	palette_data[4 * 3] = palette_data[0];
 	//}
 	//// 背景
-	//const uint8_t* now = famicom.ppu_.banks_[8];
-	//const uint8_t* bgp = famicom.ppu_.banks_[
-	//	(famicom.ppu_.ctrl_ & PPU2000_BgTabl ? 4 : 0)];
+	//const uint8_t* now = famicom.ppu_.banks[8];
+	//const uint8_t* bgp = famicom.ppu_.banks[
+	//	(famicom.ppu_.ctrl & SFC_PPU2000_BgTabl ? 4 : 0)];
 	//for (unsigned i = 0; i != 256 * 240; ++i) {
-	//	data_[i] = get_pixel(i & 0xff, i >> 8, now, bgp);
+	//	data[i] = get_pixel(i & 0xff, i >> 8, now, bgp);
 	//}
 	//==========================================================
 	//step7
 	uint8_t buffer[256 * 256];
+<<<<<<< HEAD
 	famicom.RenderFrameEasy(buffer);
 	//temp->sfc_render_frame(buffer);
+=======
+	p->sfc_render_frame_easy(buffer);
+	//p->sfc_render_frame(buffer);
+>>>>>>> parent of bfcbea9... modify names of most of files
 
 	//生成调色板数据
 	uint32_t palette[32];
 
 	for (int i = 0; i != 32; ++i) {
+<<<<<<< HEAD
 		palette[i] = stdPalette[famicom.ppu_.spindexes_[i]].data;
+=======
+		palette[i] = sfc_stdpalette[p->ppu_.spindexes[i]].data;
+>>>>>>> parent of bfcbea9... modify names of most of files
 	}
 	//镜像数据
 	palette[4 * 1] = palette[0];
@@ -184,18 +197,54 @@ void main_render(void* rgba,Famicom& famicom)noexcept {
 	}
 }
 
+<<<<<<< HEAD
 void run()
 {
 	//Famicom* famicom = new Famicom(nullptr);
 	std::shared_ptr<Famicom> famicom = Famicom::getInstance(nullptr);
 	temp = famicom;
+=======
 
-	auto test = famicom->GetRomInfo();
+int main() {
+	//_CrtSetBreakAlloc(139);
+	sfc_famicom_t* famicom = new sfc_famicom_t(nullptr);
+	//std::shared_ptr<sfc_famicom_t> famicom = sfc_famicom_t::getInstance(nullptr);
+	p = famicom;
+>>>>>>> parent of bfcbea9... modify names of most of files
+
+	auto test = famicom->get_rom_info();
 	printf("ROM:PRG-ROM: %d x 16kb	CHR-ROM %d x 8kb	Mapper: %03d\n",
 		(int)test.count_prgrom16kb,
 		(int)test.count_chrrom_8kb,
 		(int)test.mapper_number);
+<<<<<<< HEAD
 
+=======
+	uint16_t v0 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_NMI + 0);
+	uint16_t d0 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_NMI + 1);
+	v0 |= d0 << 8;
+	uint16_t v1 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 0);
+	uint16_t d1 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_RESET + 1);
+	v1 |= d1 << 8;
+	uint16_t v2 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_IRQ + 0);
+	uint16_t d2 = famicom->cpu_.sfc_read_cpu_address(SFC_VECTOR_IRQ + 1);
+	v2 |= d2 << 8;
+
+	printf("ROM: NMI: $%04X  RESET: $%04X  IRQ/BRK: $%04X\n", (int)v0, (int)v1, (int)v2);
+
+	//===================================
+	char b0[48], b1[48], b2[48];
+
+	famicom->sfc_fc_disassembly(v0, b0);
+	famicom->sfc_fc_disassembly(v1, b1);
+	famicom->sfc_fc_disassembly(v2, b2);
+	printf(
+		"NMI:     %s\n"
+		"RESET:   %s\n"
+		"IRQ/BRK: %s\n",
+		b0, b1, b2
+	);
+>>>>>>> parent of bfcbea9... modify names of most of files
 	printf("\n");
 
 	main_cpp(*famicom);
@@ -219,7 +268,11 @@ int main() {
 // 接收到键盘上的消息就把对应的信息传给states
 SFC_EXTERN_C void user_input(int index, unsigned char data) SFC_NOEXCEPT {
 	assert(index >= 0 && index < 16);
+<<<<<<< HEAD
 	temp->cpu_.button_states_[index] = data;
+=======
+	p->cpu_.button_states[index] = data;
+>>>>>>> parent of bfcbea9... modify names of most of files
 }
 //=====================================================
 SFC_EXTERN_C int sub_render(void* rgba) SFC_NOEXCEPT {
@@ -228,7 +281,11 @@ SFC_EXTERN_C int sub_render(void* rgba) SFC_NOEXCEPT {
 	//生成调色板颜色
 	{
 		for (int i = 0; i != 16; ++i) {
+<<<<<<< HEAD
 			palette_data[i] = stdPalette[temp->ppu_.spindexes_[i + 16]].data;
+=======
+			palette_data[i] = sfc_stdpalette[p->ppu_.spindexes[i + 16]].data;
+>>>>>>> parent of bfcbea9... modify names of most of files
 		}
 		palette_data[4 * 1] = palette_data[0];
 		palette_data[4 * 2] = palette_data[0];
@@ -241,11 +298,19 @@ SFC_EXTERN_C int sub_render(void* rgba) SFC_NOEXCEPT {
 	//精灵图样地址
 	//4是从$1000开始
 	//0是从$0000开始
+<<<<<<< HEAD
 	const uint8_t* spp = temp->ppu_.banks_[temp->ppu_.ctrl_ & PPU2000_SpTabl ? 4 : 0];
 	
 
 	for (int i = 63; i != -1; --i) {
 		const uint8_t* ptr = temp->ppu_.sprites_ + i * 4;
+=======
+	const uint8_t* spp = p->ppu_.banks[p->ppu_.ctrl & SFC_PPU2000_SpTabl ? 4 : 0];
+	
+
+	for (int i = 63; i != -1; --i) {
+		const uint8_t* ptr = p->ppu_.sprites + i * 4;
+>>>>>>> parent of bfcbea9... modify names of most of files
 		const uint8_t yy = ptr[0];
 		const uint8_t ii = ptr[1];	//Tile索引号(类似于名称表)
 		const uint8_t aa = ptr[2];

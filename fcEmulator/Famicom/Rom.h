@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-struct RomInfo {
+typedef struct {
 /*
 	typedef unsigned char           uint8_t;
 	typedef unsigned short int      uint16_t;
@@ -27,7 +27,7 @@ struct RomInfo {
 	// 保留以对齐
 	uint8_t reserved[4];
 
-};
+}sfc_rom_info_t;
 
 typedef struct {
 	//Identification String. Must be "NES<EOF>".
@@ -51,14 +51,14 @@ typedef struct {
 
 // ROM control 字节 #1
 enum {
-	NES_VMIRROR=0x01,
-	NES_SAVERAM=0x02,
-	NES_TRAINER=0x04,
-	NES_4SCREEN=0x08
+	SFC_NES_VMIRROR=0x01,
+	SFC_NES_SAVERAM=0x02,
+	SFC_NES_TRAINER=0x04,
+	SFC_NES_4SCREEN=0x08
 };
 
 // ROM control byte #2
 enum {
-	NES_VS_UNISYSTEM=0x01,
-	NES_Playchoice10=0x02
+	SFC_NES_VS_UNISYSTEM=0x01,
+	SFC_NES_Playchoice10=0x02
 };

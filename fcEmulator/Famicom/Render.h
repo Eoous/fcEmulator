@@ -4,7 +4,7 @@
 #include <tmmintrin.h>
 #include <emmintrin.h>
 //======================
-#define FallThrough
+#define sfc_fallthrough
 //原来有这个 因为用c++ 直接使用alignas关键字即可
 //// 微软编译器目前不支持C11的关键字_Alignas
 //#ifdef _MSC_VER
@@ -36,7 +36,7 @@ const unsigned char BitReverseTable256[] = {
 
 //使用4bit查找对应的32位整型
 //使用8bit的话会使用256*8=2kb空间，缓存不友好
-alignas(32)  const uint32_t U32BitLut[16] = {
+alignas(32)  const uint32_t sfc_u32_bit_lut[16] = {
 	0x00000000, // 0000
 	0x01000000, // 0001
 	0x00010000, // 0010
@@ -60,13 +60,13 @@ alignas(32)  const uint32_t U32BitLut[16] = {
 
 //========================================================
 //
-void SwapByte(uint8_t* a, uint8_t* b);
+void sfc_swap_byte(uint8_t* a, uint8_t* b);
 
-uint8_t PackBoolIntoByte(const uint8_t array[8]);
+uint8_t sfc_pack_bool8_into_byte(const uint8_t array[8]);
 
-__m128i Create128Mask(uint8_t a, uint8_t b);
+__m128i sfc_create_128_mask(uint8_t a, uint8_t b);
 
-void ExpandBackground16(
+void sfc_expand_backgorund_16(
 	uint8_t p0,
 	uint8_t p1,
 	uint8_t p2,
@@ -74,7 +74,7 @@ void ExpandBackground16(
 	uint8_t high,
 	uint8_t* output);
 
-void RenderBackgroundPixel16(
+void sfc_render_background_pixel16(
 	uint8_t high,
 	const uint8_t* plane_left,
 	const uint8_t* plane_right,

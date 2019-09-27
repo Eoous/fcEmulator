@@ -1,19 +1,19 @@
 #include "cpu.h"
 
-uint16_t& Register::get_program_counter()
+uint16_t& sfc_cpu_register_t::get_program_counter()
 {
-	return program_counter_;
+	return program_counter;
 }
 
 
 //===================================================
-uint8_t cpu::ReadPRG(uint16_t address) {
+uint8_t sfc_cpu::sfc_read_prgdata(uint16_t address) {
 	assert(((address & (uint16_t)0x8000) == (uint16_t)0x8000) || (address >> 13) == 0);
 	const uint16_t prgaddr = address;
-	return prg_banks_[prgaddr >> 13][prgaddr&(uint16_t)0x1fff];
+	return prg_banks[prgaddr >> 13][prgaddr&(uint16_t)0x1fff];
 }
 //read
-uint8_t cpu::ReadAddress(uint16_t address) {
+uint8_t sfc_cpu::sfc_read_cpu_address(uint16_t address) {
 	/*
 	CPU 地址空间
 	+---------+-------+-------+-----------------------+
@@ -41,27 +41,27 @@ uint8_t cpu::ReadAddress(uint16_t address) {
 		return main_memory[address & (uint16_t)0x07ff];
 	case 1:
 		//高三位为1，[$2000,$4000) :PPU寄存器，8字节步进镜像
-		return pppu_->ReadRegisterViaCPU(address);
+		return pppu_->sfc_read_ppu_register_via_cpu(address);
 	case 2:
 		//高三位为2，[$4000,$6000) :pAPU寄存器 扩展ROM区
 		if (address < 0x4020) {
-			return ReadAddress4020(address);
+			return sfc_read_cpu_address4020(address);
 		}
 		else assert(!"NOT IMPL");
 		return 0;
 	case 3:
 		//高三位为3，[$6000,$8000) :存档 SRAM区
-		return save_memory_[address & (uint16_t)0x1fff];
+		return save_memory[address & (uint16_t)0x1fff];
 	case 4:case 5:case 6:case 7:
 		//高一位为1，[$8000,$10000):程序PRG-ROM区
-		return prg_banks_[address >> 13][address & (uint16_t)0x1fff];
+		return prg_banks[address >> 13][address & (uint16_t)0x1fff];
 	}
 	assert(!"invalid address");
 	return 0;
 }
 
 
-void cpu::WriteAddress(uint16_t address, uint8_t data) {
+void sfc_cpu::sfc_write_cpu_address(uint16_t address, uint8_t data) {
 	/*
 	CPU 地址空间
 	+---------+-------+-------+-----------------------+
@@ -90,23 +90,23 @@ void cpu::WriteAddress(uint16_t address, uint8_t data) {
 		return;
 	case 1:
 		//高三位为1，[$2000,$4000) :PPU寄存器，8字节步进镜像
-		pppu_->WriteRegisterViaCPU(address, data);		
+		pppu_->sfc_write_ppu_register_via_cpu(address, data);		
 		return;
 	case 2:
 		//高三位为2，[$4000,$6000) :pAPU寄存器 扩展ROM区
 		// 前0x20字节为APU, I / O寄存器
 		if (address < 0x4020) {
-			WriteAddress4020(address, data);
+			sfc_write_cpu_address4020(address, data);
 		}
 		else assert(!"NOT IMPL");
 		return;
 	case 3:
 		//高三位为3，[$6000,$8000) :存档 SRAM区
-		save_memory_[address & (uint16_t)0x1fff] = data;
+		save_memory[address & (uint16_t)0x1fff] = data;
 	case 4:case 5:case 6:case 7:
 		//高一位为1，[$8000,$10000):程序PRG-ROM区
 		assert(!"WARNING:PRG-ROM");
-		prg_banks_[address >> 13][address & (uint16_t)0x1fff] = data;
+		prg_banks[address >> 13][address & (uint16_t)0x1fff] = data;
 		return;
 	}
 	assert(!"invalid address");
@@ -114,7 +114,7 @@ void cpu::WriteAddress(uint16_t address, uint8_t data) {
 
 
 
-void cpu::ExecuteOnce() {
+void sfc_cpu::sfc_cpu_execute_one() {
 	const uint8_t opcode = SFC_READ(SFC_PC++);
 	uint32_t cycle_add = 0;
 	//每种指令有相对应的寻址模式
@@ -155,26 +155,26 @@ void cpu::ExecuteOnce() {
 			OP(F0, REL, BEQ) OP(F1, INY, SBC) OP(F2, UNK, UNK)  OP(F3, INY, ISB) OP(F4, ZPX, NOP) OP(F5, ZPX, SBC) OP(F6, ZPX, INC) OP(F7, ZPX, ISB)
 			OP(F8, IMP, SED) OP(F9, ABY, SBC) OP(FA, IMP, NOP)  OP(FB, ABY, ISB) OP(FC, ABX, NOP) OP(FD, ABX, SBC) OP(FE, ABX, INC) OP(FF, ABX, ISB)
 	}
-	cpu_cycle_count_ += cycle_add;
+	cpu_cycle_count += cycle_add;
 }
 
 //特殊指令 : NMI
-void cpu::NMI() {
+void sfc_cpu::sfc_operation_NMI() {
 	const uint8_t pch = (uint8_t)((SFC_PC) >> 8);
 	const uint8_t pcl = (uint8_t)SFC_PC;
 	SFC_PUSH(pch);
 	SFC_PUSH(pcl);
 	SFC_PUSH(SFC_P | (uint8_t)(SFC_FLAG_R));
 	SFC_IF_SE;
-	const uint8_t pcl2 = ReadAddress(VECTOR_NMI + 0);
-	const uint8_t pch2 = ReadAddress(VECTOR_NMI + 1);
+	const uint8_t pcl2 = sfc_read_cpu_address(SFC_VECTOR_NMI + 0);
+	const uint8_t pch2 = sfc_read_cpu_address(SFC_VECTOR_NMI + 1);
 	registers_.get_program_counter() = (uint16_t)pcl2 | (uint16_t)pch2 << 8;
 
-	cpu_cycle_count_ += 7;
+	cpu_cycle_count += 7;
 }
 
 //IRQ_try
-void cpu::TryToDoIRQ() {
+void sfc_cpu::sfc_operation_IRQ_try() {
 	if (SFC_IF) return ;
 	const uint8_t pch = (uint8_t)((SFC_PC) >> 8);
 	const uint8_t pcl = (uint8_t)SFC_PC;
@@ -182,18 +182,18 @@ void cpu::TryToDoIRQ() {
 	SFC_PUSH(pcl);
 	SFC_PUSH(SFC_P | (uint8_t)(SFC_FLAG_R));
 	SFC_IF_SE;
-	const uint8_t pcl2 = SFC_READ_PC(VECTOR_IRQ + 0);
-	const uint8_t pch2 = SFC_READ_PC(VECTOR_IRQ + 1);
+	const uint8_t pcl2 = SFC_READ_PC(SFC_VECTOR_IRQ + 0);
+	const uint8_t pch2 = SFC_READ_PC(SFC_VECTOR_IRQ + 1);
 	registers_.get_program_counter() = (uint16_t)pcl2 | (uint16_t)pch2 << 8;
 
-	cpu_cycle_count_ += 7;
+	cpu_cycle_count += 7;
 }
 
 
 
 //====================================================
 //获取DMA地址
-const uint8_t* cpu::GetAddressOfDMA(uint8_t data) {
+const uint8_t* sfc_cpu::sfc_get_dma_address(uint8_t data) {
 	const uint16_t offset = ((uint16_t)(data & 0x07) << 8);
 	switch (data >> 5) {
 	default:
@@ -208,24 +208,24 @@ const uint8_t* cpu::GetAddressOfDMA(uint8_t data) {
 		return &main_memory[offset];
 	case 3:
 		//save SRAM
-		return &save_memory_[offset];
+		return &save_memory[offset];
 	case 4:case 5:case 6:case 7:
 		//高一位为1， [$8000, $10000) 程序PRG-ROM区
-		return (prg_banks_[data >> 5]) + offset;
+		return (prg_banks[data >> 5]) + offset;
 	}
 }
 //==============================================================
 //读取CPU地址数据4020
-uint8_t cpu::ReadAddress4020(uint16_t address) {
+uint8_t sfc_cpu::sfc_read_cpu_address4020(uint16_t address) {
 	uint8_t data = 0;
 	switch (address & (uint16_t)0x1f) {
 	case 0x16:
-		data = (button_states_ + 0)[button_index_1_ & button_index_mask_];
-		++button_index_1_;
+		data = (button_states + 0)[button_index_1 & button_index_mask];
+		++button_index_1;
 		break;
 	case 0x17:
-		data = (button_states_ + 8)[button_index_2_ & button_index_mask_];
-		++button_index_2_;
+		data = (button_states + 8)[button_index_2 & button_index_mask];
+		++button_index_2;
 		break;
 	}
 
@@ -235,29 +235,29 @@ uint8_t cpu::ReadAddress4020(uint16_t address) {
 
 
 //写入CPU地址数据4020
-void cpu::WriteAddress4020(uint16_t address, uint8_t data) {
+void sfc_cpu::sfc_write_cpu_address4020(uint16_t address, uint8_t data) {
 	switch (address & (uint16_t)0x1f) {
 	case 0x14:
-		//sprites_ RAM直接存储器访问
-		if (pppu_->oamaddr_) {
-			auto dst = pppu_->sprites_;
-			const auto len = pppu_->oamaddr_;
-			const auto src = GetAddressOfDMA(data);
+		//sprites RAM直接存储器访问
+		if (pppu_->oamaddr) {
+			auto dst = pppu_->sprites;
+			const auto len = pppu_->oamaddr;
+			const auto src = sfc_get_dma_address(data);
 			//需要换行
 			memcpy(dst, src + len, len);
 			memcpy(dst + len, src, 256 - len);
 		}
 		else {
-			memcpy(pppu_->sprites_, GetAddressOfDMA(data), 256);
+			memcpy(pppu_->sprites, sfc_get_dma_address(data), 256);
 		}
-		cpu_cycle_count_ += 513;
-		cpu_cycle_count_ += cpu_cycle_count_ & 1;
+		cpu_cycle_count += 513;
+		cpu_cycle_count += cpu_cycle_count & 1;
 		break;
 	case 0x16:
-		button_index_mask_ = (data & 1) ? 0x0 : 0x7;
+		button_index_mask = (data & 1) ? 0x0 : 0x7;
 		if (data & 1) {
-			button_index_1_ = 0;
-			button_index_2_ = 0;
+			button_index_1 = 0;
+			button_index_2 = 0;
 		}
 		break;
 	}

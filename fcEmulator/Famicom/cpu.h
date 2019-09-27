@@ -6,70 +6,70 @@
 
 #include <stdint.h>
 #include <assert.h>
-#include "../ppu/ppu.h"
-#include "6502.h"
+#include "PPU.h"
+#include "Famicom.h"
 
 // nes的cpu把最后几个地址称为向量
-enum cpuVector {
-	VECTOR_NMI=0xFFFA,
-	VECTOR_RESET=0xFFFC,
-	VECTOR_BRK = 0xFFFE,   // 中断重定向
-	VECTOR_IRQ=0xFFFE,
+enum sfc_cpu_vector {
+	SFC_VECTOR_NMI=0xFFFA,
+	SFC_VECTOR_RESET=0xFFFC,
+	SFC_VECTOR_BRK = 0xFFFE,   // 中断重定向
+	SFC_VECTOR_IRQ=0xFFFE,
 };
 
 //====================================
 //CPU寄存器
-class Register {
+class sfc_cpu_register_t {
 public:
 	uint16_t& get_program_counter();
 
-	uint8_t& get_status() { return status_; }
+	uint8_t& get_status() { return status; }
 
-	uint8_t& get_accumulator() { return accumulator_; }
+	uint8_t& get_accumulator() { return accumulator; }
 
-	uint8_t& get_x_index() { return x_index_; }
+	uint8_t& get_x_index() { return x_index; }
 
-	uint8_t& get_y_index() { return y_index_; }
+	uint8_t& get_y_index() { return y_index; }
 
-	uint8_t& get_stack_pointer() { return stack_pointer_; }
+	uint8_t& get_stack_pointer() { return stack_pointer; }
 
-	uint8_t& get_unused() { return unused_; }
+	uint8_t& get_unused() { return unused; }
 
 
 
 private:
 	//指令计数器
-	uint16_t program_counter_;
+	uint16_t program_counter;
 	//状态寄存器
-	uint8_t status_;
+	uint8_t status;
 	//累加寄存器
-	uint8_t accumulator_;
+	uint8_t accumulator;
 	//X变址寄存器
-	uint8_t x_index_;
+	uint8_t x_index;
 	//Y变址寄存器
-	uint8_t y_index_;
+	uint8_t y_index;
 	//栈指针
-	uint8_t stack_pointer_;
+	uint8_t stack_pointer;
 	//保留对齐用
-	uint8_t unused_;
+	uint8_t unused;
 };
 
 
 //=====================
 //状态寄存器标志
-enum StatusIndex {
-	INDEX_C = 0,
-	INDEX_Z = 1,
-	INDEX_I = 2,
-	INDEX_D = 3,
-	INDEX_B = 4,
-	INDEX_R = 5,
-	INDEX_V = 6,
-	INDEX_S = 7,
-	INDEX_N = INDEX_S
+enum sfc_status_index {
+	SFC_INDEX_C = 0,
+	SFC_INDEX_Z = 1,
+	SFC_INDEX_I = 2,
+	SFC_INDEX_D = 3,
+	SFC_INDEX_B = 4,
+	SFC_INDEX_R = 5,
+	SFC_INDEX_V = 6,
+	SFC_INDEX_S = 7,
+	SFC_INDEX_N = SFC_INDEX_S
 };
 //状态寄存器标记
-enum StatusFlag {
+enum sfc_status_flag {
 	SFC_FLAG_C = 1 << 0,		//进位标记(Carry flag)
 	SFC_FLAG_Z = 1 << 1,		//零标记(Zero flag)
 	SFC_FLAG_I = 1 << 2,		//禁止中断(Irq disabled flag)
@@ -126,11 +126,11 @@ enum StatusFlag {
 #define SFC_SF_IF(x) (x ? SFC_SF_SE : SFC_SF_CL);
 
 // 实用函数
-#define SFC_READ(a) ReadAddress(a)
-#define SFC_READ_PC(a) ReadPRG(a)
+#define SFC_READ(a) sfc_read_cpu_address(a)
+#define SFC_READ_PC(a) sfc_read_prgdata(a)
 #define SFC_PUSH(a) (main_memory + 0x100)[SFC_SP--] = a;
 #define SFC_POP() (main_memory + 0x100)[++SFC_SP];
-#define SFC_WRITE(a,v) WriteAddress(a, v )
+#define SFC_WRITE(a,v) sfc_write_cpu_address(a, v )
 #define CHECK_ZSFLAG(x) { SFC_SF_IF(x & (uint8_t)0x80); SFC_ZF_IF(x == 0); }
 
 //sfc_addressing_##a == 通过寻址模式取得地址
@@ -144,63 +144,63 @@ case 0x##n:\
     break;\
 }
 //=====================================================
-class cpu {
+class sfc_cpu {
 public:
 	//read cpu address
-	uint8_t ReadAddress(uint16_t address);
+	uint8_t sfc_read_cpu_address(uint16_t address);
 	//write cpu address
-	void WriteAddress(uint16_t address, uint8_t data);
+	void sfc_write_cpu_address(uint16_t address, uint8_t data);
 	//
-	uint8_t ReadPRG(uint16_t address);
+	uint8_t sfc_read_prgdata(uint16_t address);
 	//================================================================
 	//读4020
-	uint8_t ReadAddress4020(uint16_t address);
-	void WriteAddress4020(uint16_t address, uint8_t data);
+	uint8_t sfc_read_cpu_address4020(uint16_t address);
+	void sfc_write_cpu_address4020(uint16_t address, uint8_t data);
 	//================================================================
-	const uint8_t* GetAddressOfDMA(uint8_t data);
+	const uint8_t* sfc_get_dma_address(uint8_t data);
 	//================================================================
 	//获取指令长度
-	uint8_t GetInsLen(uint8_t opcode) {
+	uint8_t sfc_get_inslen(uint8_t opcode) {
 		return s_opname_data[opcode].mode_inslen >> 4;
 	}
 	//寄存器
-	Register registers_;
+	sfc_cpu_register_t registers_;
 
 	//程序内存仓库(bank)/窗口(window)
-	uint8_t* prg_banks_[0x10000 >> 13];
+	uint8_t* prg_banks[0x10000 >> 13];
 
 	//工作(work)/保存(save)内存
-	uint8_t save_memory_[8 * 1024];
+	uint8_t save_memory[8 * 1024];
 
 	//显存
-	uint8_t video_memory_[2 * 1024];		//（FC的显存只有2kb，只能支持2屏幕）
+	uint8_t video_memory[2 * 1024];		//（FC的显存只有2kb，只能支持2屏幕）
 
 	//4屏用额外显存
-	uint8_t video_memory_ex_[2 * 1024];
+	uint8_t video_memory_ex[2 * 1024];
 
 	//主内存
 	uint8_t main_memory[2 * 1024];
 
-	ppu* pppu_;
+	sfc_ppu_t* pppu_;
 	//==============================================
 	// 手柄序列状态#1
-	uint16_t            button_index_1_;
+	uint16_t            button_index_1;
 	// 手柄序列状态#2
-	uint16_t            button_index_2_;
+	uint16_t            button_index_2;
 	// 手柄序列状态
-	uint16_t            button_index_mask_;
+	uint16_t            button_index_mask;
 	// 手柄按钮状态
-	uint8_t             button_states_[16];
+	uint8_t             button_states[16];
 
 	//cpu 周期计数
-	uint32_t cpu_cycle_count_;
+	uint32_t cpu_cycle_count;
 	//====================================
-	void ExecuteOnce();
+	void sfc_cpu_execute_one();
 
 	//NMI - 不可屏蔽中断
-	void NMI();
+	void sfc_operation_NMI();
 	//IRQ_try
-	void TryToDoIRQ();
+	void sfc_operation_IRQ_try();
 private:
 
 
@@ -523,7 +523,7 @@ private:
 	    void sfc_operation_RRA(uint16_t address, uint32_t* const cycle) {
 			// ROR
 			uint16_t result16_ror = SFC_READ(address);
-			result16_ror |= ((uint16_t)SFC_CF) << (8 - INDEX_C);
+			result16_ror |= ((uint16_t)SFC_CF) << (8 - SFC_INDEX_C);
 			const uint16_t tmpcf = result16_ror & 1;
 			result16_ror >>= 1;
 			const uint8_t result8_ror = (uint8_t)result16_ror;
@@ -547,7 +547,7 @@ private:
 		// ROL
 		uint16_t result16 = SFC_READ(address);
 		result16 <<= 1;
-		result16 |= ((uint16_t)SFC_CF) >> (INDEX_C);
+		result16 |= ((uint16_t)SFC_CF) >> (SFC_INDEX_C);
 		SFC_CF_IF(result16 & (uint16_t)0x100);
 		const uint8_t result8 = (uint8_t)result16;
 		SFC_WRITE(address, result8);
@@ -735,8 +735,8 @@ private:
 			SFC_PUSH(pcl);
 			SFC_PUSH(SFC_P | (uint8_t)(SFC_FLAG_R) | (uint8_t)(SFC_FLAG_B));
 			SFC_IF_SE;
-			const uint8_t pcl2 = SFC_READ_PC(VECTOR_BRK + 0);
-			const uint8_t pch2 = SFC_READ_PC(VECTOR_BRK + 1);
+			const uint8_t pcl2 = SFC_READ_PC(SFC_VECTOR_BRK + 0);
+			const uint8_t pch2 = SFC_READ_PC(SFC_VECTOR_BRK + 1);
 			registers_.get_program_counter() = (uint16_t)pcl2 | (uint16_t)pch2 << 8;
 
 	}
@@ -911,7 +911,7 @@ private:
 	/// <param name=" ">The  .</param>
 	    void sfc_operation_RORA(uint16_t address, uint32_t* const cycle) {
 		uint16_t result16 = SFC_A;
-		result16 |= ((uint16_t)SFC_CF) << (8 - INDEX_C);
+		result16 |= ((uint16_t)SFC_CF) << (8 - SFC_INDEX_C);
 		SFC_CF_IF(result16 & 1);
 		result16 >>= 1;
 		SFC_A = (uint8_t)result16;
@@ -925,7 +925,7 @@ private:
 	/// <param name=" ">The  .</param>
 	    void sfc_operation_ROR(uint16_t address, uint32_t* const cycle) {
 		uint16_t result16 = SFC_READ(address);
-		result16 |= ((uint16_t)SFC_CF) << (8 - INDEX_C);
+		result16 |= ((uint16_t)SFC_CF) << (8 - SFC_INDEX_C);
 		SFC_CF_IF(result16 & 1);
 		result16 >>= 1;
 		const uint8_t result8 = (uint8_t)result16;
@@ -941,7 +941,7 @@ private:
 	    void sfc_operation_ROL(uint16_t address, uint32_t* const cycle) {
 		uint16_t result16 = SFC_READ(address);
 		result16 <<= 1;
-		result16 |= ((uint16_t)SFC_CF) >> (INDEX_C);
+		result16 |= ((uint16_t)SFC_CF) >> (SFC_INDEX_C);
 		SFC_CF_IF(result16 & (uint16_t)0x100);
 		const uint8_t result8 = (uint8_t)result16;
 		SFC_WRITE(address, result8);
@@ -956,7 +956,7 @@ private:
 	    void sfc_operation_ROLA(uint16_t address, uint32_t* const cycle) {
 		uint16_t result16 = SFC_A;
 		result16 <<= 1;
-		result16 |= ((uint16_t)SFC_CF) >> (INDEX_C);
+		result16 |= ((uint16_t)SFC_CF) >> (SFC_INDEX_C);
 		SFC_CF_IF(result16 & (uint16_t)0x100);
 		SFC_A = (uint8_t)result16;
 		CHECK_ZSFLAG(SFC_A);

@@ -9,7 +9,7 @@
 /// </summary>
 /// <param name="array">The array.</param>
 /// <returns></returns>
-uint8_t PackBoolIntoByte(const uint8_t array[8]) {
+uint8_t sfc_pack_bool8_into_byte(const uint8_t array[8]) {
 	uint8_t hittest = 0;
 	for (uint16_t i = 0; i != 8; ++i) {
 		hittest <<= 1;
@@ -40,7 +40,7 @@ uint8_t PackBoolIntoByte(const uint8_t array[8]) {
 	}
 		EOF
 
-		def op_(i)
+		def op(i)
 		print FMT %[
 			i, 7 - i,
 				i, 1 << (7 - i),
@@ -50,7 +50,7 @@ uint8_t PackBoolIntoByte(const uint8_t array[8]) {
 		]
 		end
 
-				8.times{ | i | op_ i }
+				8.times{ | i | op i }
 #endif
 				// 0 - D7
 			{
@@ -104,14 +104,14 @@ uint8_t PackBoolIntoByte(const uint8_t array[8]) {
 #else
 
 //swap byte
-void SwapByte(uint8_t* a, uint8_t* b) {
+void sfc_swap_byte(uint8_t* a, uint8_t* b) {
 	const auto temp = *a;
 	*a = *b;
 	*b = temp;
 }
 
 //sfcs the pack bool8 into byte
-uint8_t PackBoolIntoByte(const uint8_t array[8]) {
+uint8_t sfc_pack_bool8_into_byte(const uint8_t array[8]) {
 	//载入一个允许不对齐的低64(高64置0)位数据
 	__m128i values = _mm_loadl_epi64((__m128i*)array);
 	//创建序列
@@ -125,24 +125,24 @@ uint8_t PackBoolIntoByte(const uint8_t array[8]) {
 
 
 
-/// Creates the 128 mask_.
+/// Creates the 128 mask.
 
 /// __m128i _mm_set_epi32(int i3, int i2,int i1, int i0);
 
 /// 使用4个int(32bits)变量来设置__m128i变量
-__m128i Create128Mask(uint8_t a, uint8_t b) {
+__m128i sfc_create_128_mask(uint8_t a, uint8_t b) {
 	return _mm_set_epi32(
 		//a的低4位
-		U32BitLut[a & 0xF],
+		sfc_u32_bit_lut[a & 0xF],
 		//a的高4位
-		U32BitLut[a >> 4],
-		U32BitLut[b & 0xF],
-		U32BitLut[b >> 4]
+		sfc_u32_bit_lut[a >> 4],
+		sfc_u32_bit_lut[b & 0xF],
+		sfc_u32_bit_lut[b >> 4]
 	);
 }
 
 /// SFCs the expand backgorund 16.
-void ExpandBackground16(
+void sfc_expand_backgorund_16(
 	uint8_t p0,
 	uint8_t p1,
 	uint8_t p2,
@@ -151,8 +151,8 @@ void ExpandBackground16(
 	uint8_t* output) {
 	//p2是第二个tile的[0] p3是第二个tile的[8]
 	//p0是第一个tile的[0] p1是第一个tile的[8]
-	const __m128i value1 = Create128Mask(p2, p0);
-	const __m128i value2 = Create128Mask(p3, p1);
+	const __m128i value1 = sfc_create_128_mask(p2, p0);
+	const __m128i value2 = sfc_create_128_mask(p3, p1);
 
 	//这里实现的是32种的颜色表
 	//暂时不知道最低位怎么计算的
@@ -168,7 +168,7 @@ void ExpandBackground16(
 #endif
 
 //简易模式渲染背景 - 以16像素为单位
-void RenderBackgroundPixel16(
+void sfc_render_background_pixel16(
 	uint8_t high,
 	const uint8_t* plane_left,
 	const uint8_t* plane_right,
@@ -181,6 +181,6 @@ void RenderBackgroundPixel16(
 	sfc_expand_backgorund_8(plane0, plane1, high, aligned_palette + 0);
 	sfc_expand_backgorund_8(plane2, plane3, high, aligned_palette + 8);
 #else
-	ExpandBackground16(plane0, plane1, plane2, plane3, high, aligned_palette);
+	sfc_expand_backgorund_16(plane0, plane1, plane2, plane3, high, aligned_palette);
 #endif
 }

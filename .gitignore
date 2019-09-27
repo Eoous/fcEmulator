@@ -3,8 +3,11 @@
 
 # User-specific files
 *.suo
+<<<<<<< HEAD
 *.rc
 
+=======
+>>>>>>> parent of bfcbea9... modify names of most of files
 *.user
 *.userosscache
 *.sln.docstates
