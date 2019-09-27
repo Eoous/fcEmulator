@@ -58,7 +58,7 @@ void Famicom::Uninit() {
 
 ErrorCode Famicom::LoadDefaultRom() {
 	assert(rom_info_.data_prgrom == nullptr && "FREE FIRST");
-	FILE *const file = fopen("mario.nes", "rb");
+	FILE *const file = fopen("roms/mario.nes", "rb");
 
 	if (!file) {
 		return ERROR_FILE_NOT_FOUNT;

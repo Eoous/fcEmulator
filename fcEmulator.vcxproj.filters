@@ -62,9 +62,9 @@
     <ClCompile Include="fcEmulator\Famicom\ppu\ppu.cc">
       <Filter>Famicom\ppu</Filter>
     </ClCompile>
-    <ClCompile Include="fcEmulator\main.cpp" />
     <ClCompile Include="fcEmulator\common\d2d_draw.cpp">
       <Filter>mfc</Filter>
     </ClCompile>
+    <ClCompile Include="fcEmulator\main.cpp" />
   </ItemGroup>
 </Project>
